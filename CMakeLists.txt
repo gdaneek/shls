@@ -13,6 +13,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(CTest)
 
-add_subdirectory(third-patry)
+add_subdirectory(third-party)
 
 # Add service subdirectories here when their targets are implemented.
