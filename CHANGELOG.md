@@ -14,3 +14,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Common C++ and CMake ignore rules.
 - Google-style clang-format configuration.
 - Project changelog.
+- Root C++20 CMake build with pinned Drogon, rabbitmq-c, and optional GoogleTest dependencies.
