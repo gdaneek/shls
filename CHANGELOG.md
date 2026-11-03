@@ -15,3 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Google-style clang-format configuration.
 - Project changelog.
 - Root C++20 CMake build with pinned Drogon, rabbitmq-c, and optional GoogleTest dependencies.
+- Game API returning hello-world and its multi-stage Docker image.
+- Docker Compose startup for the API, PostgreSQL, Redis, and RabbitMQ.
+- Environment template, short startup instructions, and a shell smoke check.

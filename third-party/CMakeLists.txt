@@ -1,5 +1,8 @@
 include(FetchContent)
 
+# Older nested dependencies (Trantor) must also honor scoped option overrides.
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
 # Keep dependency test suites disabled without changing the project's option.
 set(MINI_CHECKERS_BUILD_TESTING "${BUILD_TESTING}")
 set(BUILD_TESTING OFF)
