@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker Compose stack with Game API, PostgreSQL, Redis, and RabbitMQ.
 - `.env.example` with the required secrets.
 - `scripts/test-startup.sh` startup check.
+- Startup instructions in the README.
 
 ### Fixed
 
