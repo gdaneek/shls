@@ -13,6 +13,23 @@ cp .env.example .env    # если .env ещё нет; задайте свои �
 docker compose up --build --wait --wait-timeout 180
 curl http://127.0.0.1:8000/hello    # {"message":"hello-world"}
 bash scripts/test-startup.sh
+bash scripts/test-integration.sh    # нужен jq; перезапускает event-worker и redis
 ```
 
 Наружу публикуется только API на `127.0.0.1:${API_PORT:-8000}`. Остановка — `docker compose down`, удаление данных вместе с томами — `docker compose down -v`.
+
+## API
+
+| Метод и путь | Назначение |
+|---|---|
+| `POST /games` | Создать игру; в ответе `game_id` и токен белых |
+| `POST /games/{id}/join` | Присоединиться вторым игроком; в ответе токен чёрных |
+| `GET /games/{id}` | Состояние игры; заголовок `X-Cache: HIT`/`MISS`/`BYPASS` |
+| `POST /games/{id}/moves` | Ход `{"from": [5, 0], "to": [4, 1]}` (строка, столбец) |
+| `POST /games/{id}/finish` | Завершить игру (сдаться); побеждает соперник |
+
+Ходы и завершение требуют заголовок `X-Player-Token`. Правила упрощены: шашка ходит на одну клетку по диагонали вперёд, белые начинают. После каждого изменения Game API сбрасывает кэш Redis и публикует событие (`game.created`, `player.joined`, `move.made`, `game.finished`) в очередь RabbitMQ `game.events`, которую читает Event Worker:
+
+```bash
+docker compose logs -f event-worker
+```
