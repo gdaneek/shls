@@ -1,0 +1,10 @@
+.git
+.env
+.env.*
+build/
+build-*/
+cmake-build-*/
+lectures/
+results/
+docs/
+trash/

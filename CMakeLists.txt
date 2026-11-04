@@ -15,4 +15,4 @@ include(CTest)
 
 add_subdirectory(third-party)
 
-# Add service subdirectories here when their targets are implemented.
+add_subdirectory(services/game-api)
