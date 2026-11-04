@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project changelog.
 - Root C++20 CMake build with pinned Drogon, rabbitmq-c, and optional GoogleTest dependencies.
 - Game API placeholder service (`GET /hello`) on C++20/Drogon with a multi-stage Dockerfile.
+- Docker Compose stack with Game API, PostgreSQL, Redis, and RabbitMQ (assignment 2).
+- `.env.example` with the required secrets.
 
 ### Fixed
 
