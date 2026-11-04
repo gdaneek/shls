@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Game API placeholder service (`GET /hello`) on C++20/Drogon with a multi-stage Dockerfile.
 - Docker Compose stack with Game API, PostgreSQL, Redis, and RabbitMQ.
 - `.env.example` with the required secrets.
+- `scripts/test-startup.sh` startup check.
 
 ### Fixed
 

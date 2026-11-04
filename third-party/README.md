@@ -30,9 +30,9 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build --parallel 2
 ```
 
-Use `-DBUILD_TESTING=OFF` to skip GoogleTest. No application executables or
-project tests exist yet; this stage only prepares their dependencies.
-Future test directories should include `GoogleTest` before calling
+Use `-DBUILD_TESTING=OFF` to skip GoogleTest. Project unit tests will be added
+alongside game logic; startup checks currently use `scripts/test-startup.sh`.
+Future GoogleTest directories should include `GoogleTest` before calling
 `gtest_discover_tests()`.
 
 The first configuration needs network access. For offline builds, prepopulate
