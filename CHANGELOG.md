@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Startup instructions in the README.
 - Shared root Dockerfile with a BuildKit cache for dependencies and object files.
 - Event Worker service that consumes game events from RabbitMQ and logs them as JSON lines.
+- Game API endpoints to create, join, read, move in, and finish games with simplified rules and per-player tokens.
+- PostgreSQL storage, Redis cache-aside reads with invalidation on writes, and RabbitMQ events with publisher confirms (assignment 3).
 
 ### Fixed
 

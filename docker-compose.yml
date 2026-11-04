@@ -8,6 +8,24 @@ services:
     image: mini-checkers-game-api:latest
     ports:
       - "127.0.0.1:${API_PORT:-8000}:8000"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: mini_checkers
+      POSTGRES_USER: mini_checkers
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      REDIS_HOST: redis
+      CACHE_TTL_SECONDS: 60
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: mini_checkers
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
+      EVENTS_QUEUE: game.events
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     read_only: true
     tmpfs:
       - /tmp
