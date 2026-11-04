@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Game API endpoints to create, join, read, move in, and finish games with simplified rules and per-player tokens.
 - PostgreSQL storage, Redis cache-aside reads with invalidation on writes, and RabbitMQ events with publisher confirms (assignment 3).
 - `scripts/test-integration.sh` check of the database, cache, and broker flows; the startup check covers Event Worker.
+- API description in the README.
 
 ### Fixed
 
