@@ -15,3 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Google-style clang-format configuration.
 - Project changelog.
 - Root C++20 CMake build with pinned Drogon, rabbitmq-c, and optional GoogleTest dependencies.
+
+### Fixed
+
+- Drogon PostgreSQL/Redis support check that always failed because the flags are set in Drogon's directory scope.

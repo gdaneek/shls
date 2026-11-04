@@ -25,7 +25,10 @@ block(SCOPE_FOR VARIABLES)
   )
   FetchContent_MakeAvailable(drogon)
 
-  if(NOT pg_FOUND OR NOT Hiredis_FOUND)
+  # Drogon sets these in its own directory scope, not in ours.
+  get_directory_property(drogon_pg_found DIRECTORY "${drogon_SOURCE_DIR}" DEFINITION pg_FOUND)
+  get_directory_property(drogon_hiredis_found DIRECTORY "${drogon_SOURCE_DIR}" DEFINITION Hiredis_FOUND)
+  if(NOT drogon_pg_found OR NOT drogon_hiredis_found)
     message(FATAL_ERROR "Drogon requires both PostgreSQL and Redis client support.")
   endif()
 endblock()
