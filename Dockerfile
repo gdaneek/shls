@@ -1,5 +1,6 @@
-# Images of the custom services. Build context: repository root.
+# Images of both custom services. Build context: repository root.
 #   docker build --target game-api .
+#   docker build --target event-worker .
 FROM debian:bookworm-slim AS build
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -16,9 +17,9 @@ COPY services ./services
 # builds, so a code change does not re-clone and rebuild Drogon.
 RUN --mount=type=cache,target=/build,sharing=locked \
     cmake -S . -B /build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
-    && cmake --build /build --target game-api --parallel "$(nproc)" \
+    && cmake --build /build --target game-api event-worker --parallel "$(nproc)" \
     && mkdir -p /out \
-    && cp /build/services/game-api/game-api /out/
+    && cp /build/services/game-api/game-api /build/services/event-worker/event-worker /out/
 
 FROM debian:bookworm-slim AS runtime
 
@@ -33,3 +34,6 @@ COPY --from=build /out/game-api /usr/local/bin/game-api
 EXPOSE 8000
 ENTRYPOINT ["/usr/local/bin/game-api"]
 
+FROM runtime AS event-worker
+COPY --from=build /out/event-worker /usr/local/bin/event-worker
+ENTRYPOINT ["/usr/local/bin/event-worker"]

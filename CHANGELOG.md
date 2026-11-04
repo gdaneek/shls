@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scripts/test-startup.sh` startup check.
 - Startup instructions in the README.
 - Shared root Dockerfile with a BuildKit cache for dependencies and object files.
+- Event Worker service that consumes game events from RabbitMQ and logs them as JSON lines.
 
 ### Fixed
 
