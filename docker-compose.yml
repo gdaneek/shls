@@ -21,6 +21,25 @@ services:
       timeout: 3s
       retries: 5
 
+  event-worker:
+    build:
+      context: .
+      target: event-worker
+    image: mini-checkers-event-worker:latest
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: mini_checkers
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
+      EVENTS_QUEUE: game.events
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
   postgres:
     image: postgres:17-bookworm
     environment:

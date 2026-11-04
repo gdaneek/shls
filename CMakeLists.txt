@@ -16,3 +16,4 @@ include(CTest)
 add_subdirectory(third-party)
 
 add_subdirectory(services/game-api)
+add_subdirectory(services/event-worker)
