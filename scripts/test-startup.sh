@@ -49,9 +49,17 @@ redis_ping() {
   [[ "$(docker compose exec -T redis redis-cli ping)" == "PONG" ]]
 }
 
+is_running() {
+  local id
+  id="$(container_id "$1")"
+  [[ -n "$id" ]] &&
+    [[ "$(docker inspect -f '{{.State.Status}}' "$id")" == "running" ]]
+}
+
 for service in game-api postgres redis rabbitmq; do
   check "$service container is healthy" is_healthy "$service"
 done
+check "event-worker container is running" is_running event-worker
 
 check "game-api GET /hello returns hello-world" hello_in_container
 check "postgres executes SELECT 1" postgres_query
@@ -59,7 +67,7 @@ check "redis answers PONG" redis_ping
 check "rabbitmq AMQP listener accepts connections" \
   docker compose exec -T rabbitmq rabbitmq-diagnostics -q check_port_connectivity
 
-for service in postgres redis rabbitmq; do
+for service in postgres redis rabbitmq event-worker; do
   check "$service has no ports published on the host" not_published "$service"
 done
 
