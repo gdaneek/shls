@@ -4,7 +4,7 @@ services:
   game-api:
     build:
       context: .
-      dockerfile: services/game-api/Dockerfile
+      target: game-api
     image: mini-checkers-game-api:latest
     ports:
       - "127.0.0.1:${API_PORT:-8000}:8000"

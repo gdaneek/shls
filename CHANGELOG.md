@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.env.example` with the required secrets.
 - `scripts/test-startup.sh` startup check.
 - Startup instructions in the README.
+- Shared root Dockerfile with a BuildKit cache for dependencies and object files.
 
 ### Fixed
 
