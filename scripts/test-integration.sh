@@ -67,6 +67,14 @@ wait_until() {
 
 has_event() { worker_events "$1" | grep -q "\"event_type\":\"$2\""; }
 
+outbox_empty() { [[ "$(sql "SELECT count(*) FROM outbox_events WHERE game_id = '$game_id'")" == 0 ]]; }
+settle_events() {
+  # The outbox also invalidates the cache before sending (including replay).
+  # Test HIT/MISS after this finite background work has completed.
+  wait_until 15 outbox_empty || fail "outbox drained for $game_id"
+}
+one_queued_event() { [[ "$(queue_depth)" == 1 ]]; }
+
 echo "--- write: create and join"
 request POST /games
 expect_eq "POST /games -> 201" 201 "$STATUS"
@@ -74,6 +82,7 @@ game_id="$(jq -r .game_id <<<"$BODY")"
 white_token="$(jq -r .player_token <<<"$BODY")"
 expect_eq "creator plays white" white "$(jq -r .side <<<"$BODY")"
 echo "INFO  game_id=$game_id"
+settle_events
 
 echo "--- read: cache-aside"
 expect_eq "no cache entry before the first read" 0 "$(redis EXISTS "game:$game_id")"
@@ -94,6 +103,7 @@ expect_eq "second player plays black" black "$(jq -r .side <<<"$BODY")"
 expect_eq "join invalidated the cache entry" 0 "$(redis EXISTS "game:$game_id")"
 request POST "/games/$game_id/join"
 expect_eq "third player cannot join -> 409" 409 "$STATUS"
+settle_events
 request GET "/games/$game_id"
 expect_eq "GET after join is a MISS" MISS "$CACHE"
 expect_eq "game is active after join" active "$(jq -r .status <<<"$BODY")"
@@ -115,6 +125,7 @@ expect_eq "white move -> 200" 200 "$STATUS"
 expect_eq "turn passes to black" black "$(jq -r .current_turn <<<"$BODY")"
 expect_eq "piece moved on the board (row 4)" ".w......" "$(jq -r '.board[4]' <<<"$BODY")"
 expect_eq "move invalidated the cache entry" 0 "$(redis EXISTS "game:$game_id")"
+settle_events
 request GET "/games/$game_id"
 expect_eq "GET after move is a MISS with the new state" "MISS 3" "$CACHE $(jq -r .version <<<"$BODY")"
 
@@ -163,7 +174,7 @@ echo "--- broker: events wait in the durable queue while the worker is down"
 docker compose stop event-worker >/dev/null 2>&1
 request POST /games
 queued_game="$(jq -r .game_id <<<"$BODY")"
-if wait_until 10 test "$(queue_depth)" = 1; then
+if wait_until 10 one_queued_event; then
   pass "event is queued while event-worker is stopped"
 else
   fail "event is queued while event-worker is stopped (depth $(queue_depth))"

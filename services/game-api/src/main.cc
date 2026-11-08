@@ -107,12 +107,38 @@ int main() {
       .user = Env("RABBITMQ_USER", "mini_checkers"),
       .password = RequiredEnv("RABBITMQ_PASSWORD"),
       .queue = Env("EVENTS_QUEUE", "game.events"),
-  });
+  }, db, redis);
 
-  mini_checkers::GameApi api(db, redis, publisher,
+  mini_checkers::GameApi api(db, redis,
                              IntEnv("CACHE_TTL_SECONDS", 60));
   CreateSchemaWithRetry(api);
+  publisher.Start();
   api.RegisterRoutes();
+
+  drogon::app().registerHandler(
+      "/health/live",
+      [](drogon::HttpRequestPtr) -> drogon::Task<drogon::HttpResponsePtr> {
+        Json::Value body;
+        body["status"] = "alive";
+        co_return drogon::HttpResponse::newHttpJsonResponse(body);
+      }, {drogon::Get});
+  drogon::app().registerHandler(
+      "/health/ready",
+      [db](drogon::HttpRequestPtr) -> drogon::Task<drogon::HttpResponsePtr> {
+        Json::Value body;
+        bool ready = false;
+        try {
+          co_await db->execSqlCoro("SELECT 1 FROM outbox_events LIMIT 1");
+          ready = true;
+        } catch (const drogon::orm::DrogonDbException&) {
+        }
+        // Redis is disposable; RabbitMQ can be down while outbox rows wait.
+        body["status"] = ready ? "ready" : "not_ready";
+        auto response = drogon::HttpResponse::newHttpJsonResponse(body);
+        response->setStatusCode(ready ? drogon::k200OK
+                                      : drogon::k503ServiceUnavailable);
+        co_return response;
+      }, {drogon::Get});
 
   drogon::app().registerHandler(
       "/hello",

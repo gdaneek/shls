@@ -5,6 +5,7 @@
 #include <rabbitmq-c/amqp.h>
 #include <rabbitmq-c/tcp_socket.h>
 #include <signal.h>
+#include <sys/socket.h>
 
 #include <atomic>
 #include <chrono>
@@ -13,6 +14,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
+#include <fstream>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -25,6 +28,18 @@ constexpr uint16_t kPrefetchCount = 10;
 constexpr timeval kNetworkTimeout{5, 0};
 
 std::atomic<bool> g_stop{false};
+static_assert(std::atomic<bool>::is_always_lock_free);
+
+constexpr char kHeartbeatFile[] = "/tmp/event-worker-heartbeat";
+
+void MarkProgress() {
+  std::ofstream file("/tmp/event-worker-heartbeat.new");
+  file << std::time(nullptr);
+  file.close();
+  if (!file || std::rename("/tmp/event-worker-heartbeat.new", kHeartbeatFile)) {
+    throw std::runtime_error("cannot update worker heartbeat");
+  }
+}
 
 void HandleStopSignal(int) { g_stop = true; }
 
@@ -105,6 +120,9 @@ bool Connect(amqp_connection_state_t connection, const Config& config) {
     return false;
   }
   amqp_set_rpc_timeout(connection, &kNetworkTimeout);
+  amqp_set_handshake_timeout(connection, &kNetworkTimeout);
+  setsockopt(amqp_get_sockfd(connection), SOL_SOCKET, SO_SNDTIMEO,
+             &kNetworkTimeout, sizeof(kNetworkTimeout));
   return IsOk(amqp_login(connection, "/", 0, AMQP_DEFAULT_FRAME_SIZE,
                          kHeartbeatSeconds, AMQP_SASL_METHOD_PLAIN,
                          config.user.c_str(), config.password.c_str())) &&
@@ -145,6 +163,7 @@ void Consume(amqp_connection_state_t connection, uint64_t& processed_total) {
         amqp_consume_message(connection, &envelope, &timeout, 0);
     if (reply.reply_type == AMQP_RESPONSE_LIBRARY_EXCEPTION &&
         reply.library_error == AMQP_STATUS_TIMEOUT) {
+      MarkProgress();
       continue;
     }
     if (!IsOk(reply)) {
@@ -152,6 +171,10 @@ void Consume(amqp_connection_state_t connection, uint64_t& processed_total) {
       return;
     }
     ProcessEvent(envelope, ++processed_total);
+    if (!std::cout.good()) {
+      amqp_destroy_envelope(&envelope);
+      throw std::runtime_error("event log write failed; message not acknowledged");
+    }
     const int ack = amqp_basic_ack(connection, envelope.channel,
                                    envelope.delivery_tag, 0);
     amqp_destroy_envelope(&envelope);
@@ -159,12 +182,21 @@ void Consume(amqp_connection_state_t connection, uint64_t& processed_total) {
       Log("warn", "failed to acknowledge a message");
       return;
     }
+    MarkProgress();
   }
 }
 
 }  // namespace
 
-int main() {
+int main(int argc, char** argv) {
+  if (argc == 2 && std::string_view(argv[1]) == "--healthcheck") {
+    std::time_t heartbeat = 0;
+    std::ifstream file(kHeartbeatFile);
+    file >> heartbeat;
+    const auto age = std::time(nullptr) - heartbeat;
+    return file && age >= 0 && age < 15 ? 0 : 1;
+  }
+  std::remove(kHeartbeatFile);
   struct sigaction action {};
   action.sa_handler = HandleStopSignal;
   sigaction(SIGTERM, &action, nullptr);
@@ -186,6 +218,7 @@ int main() {
   while (!g_stop) {
     amqp_connection_state_t connection = amqp_new_connection();
     if (Connect(connection, config)) {
+      MarkProgress();
       Log("info", "consuming events",
           R"(,"queue":")" + JsonEscape(config.queue) + '"');
       Consume(connection, processed_total);
@@ -197,6 +230,7 @@ int main() {
       Log("warn", "RabbitMQ is unavailable, retrying",
           R"(,"host":")" + JsonEscape(config.host) + '"');
     }
+    std::remove(kHeartbeatFile);
     amqp_destroy_connection(connection);
     for (int i = 0; i < 20 && !g_stop; ++i) {
       std::this_thread::sleep_for(std::chrono::milliseconds(100));

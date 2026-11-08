@@ -3,16 +3,16 @@
 #include <rabbitmq-c/amqp.h>
 #include <rabbitmq-c/tcp_socket.h>
 #include <trantor/utils/Logger.h>
+#include <sys/socket.h>
 
+#include <chrono>
 #include <utility>
 
 namespace mini_checkers {
 namespace {
 
 constexpr amqp_channel_t kChannel = 1;
-constexpr std::size_t kMaxQueuedMessages = 10000;
 constexpr auto kRetryDelay = std::chrono::seconds(1);
-constexpr auto kShutdownFlushTime = std::chrono::seconds(3);
 constexpr timeval kNetworkTimeout{5, 0};
 
 bool IsOk(const amqp_rpc_reply_t& reply) {
@@ -25,65 +25,68 @@ amqp_bytes_t ToBytes(const std::string& value) {
 
 }  // namespace
 
-EventPublisher::EventPublisher(Config config)
-    : config_(std::move(config)), thread_([this] { Run(); }) {}
+EventPublisher::EventPublisher(Config config, drogon::orm::DbClientPtr db,
+                               drogon::nosql::RedisClientPtr redis)
+    : config_(std::move(config)), db_(std::move(db)), redis_(std::move(redis)) {}
+
+void EventPublisher::Start() { thread_ = std::thread([this] { Run(); }); }
 
 EventPublisher::~EventPublisher() {
   {
     std::lock_guard lock(mutex_);
     stopping_ = true;
-    stop_deadline_ = std::chrono::steady_clock::now() + kShutdownFlushTime;
   }
   cv_.notify_all();
-  thread_.join();
-}
-
-void EventPublisher::Publish(std::string type, std::string event_id,
-                             std::string body) {
-  {
-    std::lock_guard lock(mutex_);
-    if (queue_.size() >= kMaxQueuedMessages) {
-      LOG_ERROR << "event queue is full, dropping event type=" << type
-                << " event_id=" << event_id;
-      return;
-    }
-    queue_.push_back({std::move(type), std::move(event_id), std::move(body)});
-  }
-  cv_.notify_one();
+  if (thread_.joinable()) thread_.join();
 }
 
 void EventPublisher::Run() {
   while (true) {
-    Message message;
     {
-      std::unique_lock lock(mutex_);
-      cv_.wait(lock, [this] { return stopping_ || !queue_.empty(); });
-      if (queue_.empty()) break;
-      if (stopping_ && std::chrono::steady_clock::now() > stop_deadline_) {
-        LOG_ERROR << "shutting down with " << queue_.size()
-                  << " unpublished event(s)";
-        break;
+      std::lock_guard lock(mutex_);
+      if (stopping_) break;
+    }
+    try {
+      auto rows = db_->execSqlSync(
+          "SELECT event_id::text, game_id::text, type, "
+          "jsonb_build_object('event_id', event_id, 'game_id', game_id, "
+          "'type', type, 'request_id', request_id, 'occurred_at', created_at, "
+          "'data', data)::text AS body FROM outbox_events "
+          "ORDER BY sequence LIMIT 1");
+      if (!rows.empty()) {
+        const auto row = rows[0];
+        Message message{row["type"].as<std::string>(),
+                        row["event_id"].as<std::string>(),
+                        row["body"].as<std::string>()};
+        // Also invalidate on replay after a crash between COMMIT and DEL.
+        // Redis is optional: a timeout must not block delivery indefinitely.
+        if (redis_) {
+          try {
+            const auto key = "game:" + row["game_id"].as<std::string>();
+            redis_->execCommandSync(
+                [](const auto& result) { return result.asInteger(); },
+                "DEL %s", key.c_str());
+          } catch (const std::exception&) {
+            LOG_WARN << "outbox cache invalidation unavailable";
+          }
+        }
+        if ((connection_ != nullptr || Connect()) && Send(message)) {
+          db_->execSqlSync("DELETE FROM outbox_events WHERE event_id = $1::uuid",
+                           message.event_id);
+          LOG_INFO << "event published type=" << message.type
+                   << " event_id=" << message.event_id;
+          continue;
+        }
+        Disconnect();
       }
-      message = queue_.front();
+    } catch (const drogon::orm::DrogonDbException&) {
+      LOG_WARN << "outbox storage unavailable, retrying";
+    } catch (const std::exception&) {
+      LOG_ERROR << "outbox iteration failed, retrying";
     }
-
-    if (connection_ == nullptr && !Connect()) {
-      WaitBeforeRetry();
-      continue;
-    }
-    if (!Send(message)) {
-      LOG_WARN << "failed to publish event_id=" << message.event_id
-               << ", reconnecting";
-      Disconnect(false);
-      WaitBeforeRetry();
-      continue;
-    }
-    LOG_INFO << "event published type=" << message.type
-             << " event_id=" << message.event_id;
-    std::lock_guard lock(mutex_);
-    queue_.pop_front();
+    WaitBeforeRetry();
   }
-  Disconnect(true);
+  Disconnect();  // Pending rows remain durable; no shutdown flush needed.
 }
 
 bool EventPublisher::Connect() {
@@ -94,10 +97,14 @@ bool EventPublisher::Connect() {
                                &kNetworkTimeout) != AMQP_STATUS_OK) {
     LOG_WARN << "RabbitMQ is unavailable at " << config_.host << ":"
              << config_.port;
-    Disconnect(false);
+    Disconnect();
     return false;
   }
   amqp_set_rpc_timeout(connection_, &kNetworkTimeout);
+  amqp_set_handshake_timeout(connection_, &kNetworkTimeout);
+  // Bound blocking writes even if a connected broker stops reading.
+  setsockopt(amqp_get_sockfd(connection_), SOL_SOCKET, SO_SNDTIMEO,
+             &kNetworkTimeout, sizeof(kNetworkTimeout));
 
   const bool ok =
       IsOk(amqp_login(connection_, "/", 0, AMQP_DEFAULT_FRAME_SIZE, 0,
@@ -110,19 +117,15 @@ bool EventPublisher::Connect() {
       amqp_confirm_select(connection_, kChannel) != nullptr;
   if (!ok) {
     LOG_WARN << "RabbitMQ login or queue setup failed";
-    Disconnect(false);
+    Disconnect();
     return false;
   }
   LOG_INFO << "connected to RabbitMQ, queue=" << config_.queue;
   return true;
 }
 
-void EventPublisher::Disconnect(bool graceful) {
+void EventPublisher::Disconnect() {
   if (connection_ == nullptr) return;
-  if (graceful) {
-    amqp_channel_close(connection_, kChannel, AMQP_REPLY_SUCCESS);
-    amqp_connection_close(connection_, AMQP_REPLY_SUCCESS);
-  }
   amqp_destroy_connection(connection_);
   connection_ = nullptr;
 }
