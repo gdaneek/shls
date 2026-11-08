@@ -59,6 +59,7 @@ dd { margin: 0; font-weight: 600; text-align: right; }
 .message { font-size: .85rem; color: var(--muted); min-height: 2.8em; line-height: 1.4; margin: 16px 0 8px; }
 .message.error { color: #a6312c; }
 .message.success { color: var(--green); }
+.sync-status { margin: 0 0 14px; font-size: .75rem; color: var(--muted); }
 .board-frame { display: grid; grid-template-columns: 20px minmax(0, 1fr); grid-template-rows: 20px minmax(0, 1fr); gap: 6px; max-width: 520px; margin: 0 auto; }
 .columns { grid-column: 2; display: grid; grid-template-columns: repeat(8, 1fr); }
 .rows { grid-row: 2; display: grid; grid-template-rows: repeat(8, 1fr); }
