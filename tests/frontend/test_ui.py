@@ -1,0 +1,297 @@
+#!/usr/bin/env python3
+"""Frontend HTTP and real Firefox checks. Python stdlib; no npm/Selenium.
+
+Run: python3 tests/frontend/test_ui.py [--docker-bridge] [--http-only]
+Needs Firefox + geckodriver for browser checks. FRONTEND_URL defaults to
+http://127.0.0.1:8000. --docker-bridge uses a temporary localhost test proxy
+through `docker compose exec frontend nc` when a VPN blocks Docker's host port;
+it tests the real Nginx/UI/API, but NOT the host port publication itself.
+"""
+
+import argparse
+import base64
+import http.client
+import http.server
+import json
+import os
+from pathlib import Path
+import shutil
+import socket
+import subprocess
+import tempfile
+import threading
+import time
+import urllib.error
+import urllib.request
+
+ROOT = Path(__file__).resolve().parents[2]
+HTTP = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
+
+def fetch(url, method="GET", data=None):
+    payload = None if data is None else json.dumps(data).encode()
+    request = urllib.request.Request(url, data=payload, method=method,
+                                     headers={"Content-Type": "application/json"})
+    try:
+        response = HTTP.open(request, timeout=20)
+    except urllib.error.HTTPError as error:
+        response = error
+    with response:
+        return response.status, response.headers, response.read()
+
+
+class Bridge(http.server.BaseHTTPRequestHandler):
+    """A test-only transport, never part of deployment or application code."""
+
+    def log_message(self, *_):
+        pass
+
+    def do_GET(self):
+        body = self.rfile.read(int(self.headers.get("Content-Length", "0")))
+        headers = "".join(f"{key}: {value}\r\n" for key, value in self.headers.items()
+                          if key.lower() not in {"host", "connection", "accept-encoding"})
+        raw = (f"{self.command} {self.path} HTTP/1.1\r\nHost: localhost:8080\r\n"
+               f"Connection: close\r\n{headers}\r\n").encode() + body
+        # Keep stdin open until the response arrives. Closing it immediately
+        # makes BusyBox nc close the socket while an asynchronous POST runs.
+        with subprocess.Popen(
+            ["docker", "compose", "exec", "-T", "frontend", "nc", "-w", "15", "127.0.0.1", "8080"],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            cwd=ROOT) as process:
+            process.stdin.write(raw)
+            process.stdin.flush()
+
+            class RawSocket:
+                def makefile(self, *_):
+                    return process.stdout
+
+            response = http.client.HTTPResponse(RawSocket())
+            response.begin()
+            decoded = response.read()
+            process.stdin.close()
+            process.wait(timeout=20)
+        self.send_response(response.status)
+        for key, value in response.getheaders():
+            if key.lower() not in {"connection", "transfer-encoding", "content-length"}:
+                self.send_header(key, value)
+        self.send_header("Content-Length", str(len(decoded)))
+        self.end_headers()
+        self.wfile.write(decoded)
+
+    do_POST = do_GET
+
+
+class Browser:
+    def __init__(self, address):
+        self.address = address
+        self.session = self.call("POST", "/session", {"capabilities": {"alwaysMatch": {
+            "browserName": "firefox", "moz:firefoxOptions": {
+                "args": ["-headless"], "prefs": {"network.proxy.type": 0},
+            },
+        }}})["sessionId"]
+
+    def call(self, method, path, data=None):
+        status, _, body = fetch(self.address + path, method, data)
+        value = json.loads(body)["value"]
+        if status >= 400:
+            raise AssertionError(value.get("message", "WebDriver command failed"))
+        return value
+
+    def command(self, method, path, data=None):
+        return self.call(method, f"/session/{self.session}{path}", data)
+
+    def js(self, script):
+        return self.command("POST", "/execute/sync", {"script": script, "args": []})
+
+    def wait(self, expression, seconds=20):
+        deadline = time.monotonic() + seconds
+        while time.monotonic() < deadline:
+            if self.js("return " + expression):
+                return
+            time.sleep(0.15)
+        raise AssertionError("Browser condition timed out: " + expression)
+
+    def element(self, css):
+        value = self.command("POST", "/element", {"using": "css selector", "value": css})
+        return value["element-6066-11e4-a52e-4f735466cecf"]
+
+    def click(self, css):
+        self.wait(f"document.querySelector({json.dumps(css)})?.disabled !== true")
+        self.command("POST", f"/element/{self.element(css)}/click", {})
+
+    def fill(self, css, text):
+        element = self.element(css)
+        self.command("POST", f"/element/{element}/clear", {})
+        self.command("POST", f"/element/{element}/value", {"text": text})
+
+    def new_tab(self, url):
+        handle = self.command("POST", "/window/new", {"type": "tab"})["handle"]
+        self.switch(handle)
+        self.command("POST", "/url", {"url": url})
+        self.wait("document.querySelectorAll('.cell').length === 64")
+        return handle
+
+    def switch(self, handle):
+        self.command("POST", "/window", {"handle": handle})
+
+
+def http_checks(url):
+    status, headers, page = fetch(url + "/")
+    assert status == 200 and b'id="board"' in page and b'/app.js' in page
+    assert headers["X-Content-Type-Options"] == "nosniff"
+    assert "frame-ancestors 'none'" in headers["Content-Security-Policy"]
+    assert headers["Cache-Control"] == "no-store"
+    for path, mime in [("/app.js", "javascript"), ("/style.css", "text/css")]:
+        status, headers, body = fetch(url + path)
+        assert status == 200 and mime in headers["Content-Type"] and body
+    assert json.loads(fetch(url + "/api/hello")[2]) == {"message": "hello-world"}
+    assert json.loads(fetch(url + "/hello")[2]) == {"message": "hello-world"}
+    assert fetch(url + "/missing")[0] == 404
+    assert fetch(url + "/nginx.conf")[0] == 404
+    created = json.loads(fetch(url + "/api/games", "POST")[2])
+    game = created["game_id"]
+    assert fetch(url + f"/api/games/{game}/moves", "POST",
+                 {"from": [5, 0], "to": [4, 1]})[0] == 401
+    print("PASS HTTP: static assets, security headers, proxy, 404 and move authorization")
+
+
+def browser_checks(browser, url, screenshot):
+    b = browser
+    white = b.new_tab(url)
+    b.fill("#connect-id", "not-a-game")
+    b.click("#join")
+    b.wait("document.querySelector('#message').classList.contains('error')")
+    b.click("#create")
+    b.wait("document.querySelector('#game-status').textContent === 'Ожидание игрока'")
+    game = b.js("return document.querySelector('#game-id').value")
+    assert b.js("return document.querySelectorAll('.piece').length") == 24
+    assert b.js("return document.querySelectorAll('.cell:not(:disabled)').length") == 0
+    assert b.js("return document.querySelector('#player-side').textContent") == "Белые"
+    assert b.js("return !document.body.textContent.includes(JSON.parse(sessionStorage.getItem('mini-checkers:player:' + document.querySelector('#game-id').value)).player_token) && !location.href.includes('token') && localStorage.length === 0")
+    print("PASS UI: invalid ID, create, initial board, waiting state, credentials private")
+
+    # Use the UI's noopener link: the new tab must not inherit white's key.
+    handles = b.command("GET", "/window/handles")
+    b.click('a[target="_blank"]')
+    deadline = time.monotonic() + 10
+    while time.monotonic() < deadline:
+        added = set(b.command("GET", "/window/handles")) - set(handles)
+        if added:
+            break
+        time.sleep(0.15)
+    assert added
+    black = added.pop()
+    b.switch(black)
+    b.wait("document.querySelectorAll('.cell').length === 64")
+    assert b.js("return sessionStorage.length") == 0
+    b.fill("#connect-id", game)
+    b.click("#join")
+    b.wait("document.querySelector('#player-side').textContent === 'Чёрные'")
+    print("PASS UI: second tab has no inherited key and joins as black")
+
+    b.switch(white)
+    b.click("#refresh")
+    b.wait("document.querySelector('#turn-badge').textContent === 'Ваш ход'")
+    b.click('[data-row="5"][data-col="0"]')
+    assert b.js("return document.querySelectorAll('.cell.legal').length") == 1
+    screenshot.write_bytes(base64.b64decode(b.command("GET", "/screenshot")))
+    b.click('[data-row="4"][data-col="1"]')
+    b.wait("document.querySelector('#game-version').textContent === '3'")
+    b.command("POST", "/refresh", {})
+    b.wait("document.querySelector('#game-id').value !== '' && !document.querySelector('#refresh').disabled")
+    assert b.js("return document.querySelector('#player-side').textContent") == "Белые"
+    assert b.js("return document.querySelectorAll('.cell:not(:disabled)').length") == 0
+    print("PASS UI: select, legal target, white move, tab reload preserves white, turn enforced")
+
+    b.switch(black)
+    b.click("#refresh")
+    b.wait("document.querySelector('#turn-badge').textContent === 'Ваш ход'")
+    b.click('[data-row="2"][data-col="1"]')
+    b.click('[data-row="3"][data-col="0"]')
+    b.wait("document.querySelector('#game-version').textContent === '4'")
+    print("PASS UI: black refreshes and makes the next move")
+
+    b.new_tab(url)
+    b.fill("#connect-id", game)
+    b.click("#open")
+    b.wait("document.querySelector('#player-side').textContent === 'Зритель'")
+    assert b.js("return document.querySelector('#finish').disabled && document.querySelectorAll('.cell:not(:disabled)').length === 0")
+    b.click("#join")
+    b.wait("document.querySelector('#message').classList.contains('error')")
+    assert b.js("return document.querySelector('#player-side').textContent") == "Зритель"
+    print("PASS UI: spectator cannot move/resign; third join fails without changing role")
+
+    b.switch(black)
+    b.click("#finish")
+    b.command("POST", "/alert/accept", {})
+    b.wait("document.querySelector('#game-status').textContent === 'Завершена'")
+    assert b.js("return document.querySelector('#turn-status').textContent") == "Победили белые"
+    b.switch(white)
+    b.click("#refresh")
+    b.wait("document.querySelector('#game-status').textContent === 'Завершена'")
+    assert b.js("return document.querySelectorAll('.cell:not(:disabled)').length === 0")
+    print("PASS UI: resign confirmation, winner, finished game on both tabs")
+
+    b.click("#create")
+    b.wait("document.querySelector('#game-status').textContent === 'Ожидание игрока'")
+    b.click("#finish")
+    b.command("POST", "/alert/accept", {})
+    b.wait("document.querySelector('#turn-status').textContent === 'Игра закрыта'")
+    b.command("POST", "/window/rect", {"width": 390, "height": 844})
+    assert b.js("return document.documentElement.scrollWidth <= window.innerWidth")
+    print("PASS UI: close waiting game, narrow viewport has no horizontal overflow")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--docker-bridge", action="store_true")
+    parser.add_argument("--http-only", action="store_true")
+    args = parser.parse_args()
+    os.chdir(ROOT)
+    server = None
+    driver = None
+    browser = None
+    try:
+        url = os.environ.get("FRONTEND_URL", "http://127.0.0.1:8000").rstrip("/")
+        if args.docker_bridge:
+            server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Bridge)
+            threading.Thread(target=server.serve_forever, daemon=True).start()
+            url = f"http://127.0.0.1:{server.server_port}"
+            print("INFO Docker test bridge active; the published host port is NOT tested")
+        http_checks(url)
+        if args.http_only:
+            return
+        if not shutil.which("geckodriver"):
+            raise SystemExit("Browser checks need Firefox and geckodriver (or use --http-only)")
+        with socket.socket() as sock:
+            sock.bind(("127.0.0.1", 0))
+            port = sock.getsockname()[1]
+        address = f"http://127.0.0.1:{port}"
+        with tempfile.TemporaryFile() as log:
+            driver = subprocess.Popen(["geckodriver", "--host", "127.0.0.1", "--port", str(port)],
+                                      stdout=log, stderr=log)
+            deadline = time.monotonic() + 20
+            while time.monotonic() < deadline:
+                try:
+                    if fetch(address + "/status")[0] == 200:
+                        break
+                except OSError:
+                    time.sleep(0.2)
+            browser = Browser(address)
+            browser.command("POST", "/window/rect", {"width": 1280, "height": 1100})
+            screenshot = Path(os.environ.get("UI_SCREENSHOT", "/tmp/opencode/t01-ui.png"))
+            browser_checks(browser, url, screenshot)
+            print(f"PASS browser scenarios; screenshot: {screenshot}")
+    finally:
+        if browser:
+            browser.command("DELETE", "", None)
+        if driver:
+            driver.terminate()
+            driver.wait(timeout=15)
+        if server:
+            server.shutdown()
+            server.server_close()
+
+
+if __name__ == "__main__":
+    main()
