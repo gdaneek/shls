@@ -1,0 +1,12 @@
+[Unit]
+Description=Mini Checkers daily PostgreSQL backup
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+ExecStart="@ROOT@/scripts/backup.sh"
+Environment=BACKUP_RETENTION_DAYS=7
+UMask=0077
+TimeoutStartSec=5min
+Restart=on-failure
+RestartSec=5min
