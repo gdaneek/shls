@@ -9,6 +9,8 @@
 #include <array>
 #include <cctype>
 #include <exception>
+#include <fstream>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -18,62 +20,6 @@ namespace {
 
 using drogon::HttpStatusCode;
 using drogon::Task;
-
-constexpr std::array kSchema = {
-    R"sql(
-    CREATE TABLE IF NOT EXISTS games (
-      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      status text NOT NULL CHECK (status IN ('waiting', 'active', 'finished')),
-      board text NOT NULL CHECK (char_length(board) = 64),
-      current_turn text NOT NULL CHECK (current_turn IN ('white', 'black')),
-      winner text CHECK (winner IN ('white', 'black')),
-      version integer NOT NULL DEFAULT 1,
-      created_at timestamptz NOT NULL DEFAULT now(),
-      updated_at timestamptz NOT NULL DEFAULT now()
-    ))sql",
-    R"sql(
-    CREATE TABLE IF NOT EXISTS game_players (
-      game_id uuid NOT NULL REFERENCES games (id) ON DELETE CASCADE,
-      side text NOT NULL CHECK (side IN ('white', 'black')),
-      token_hash text NOT NULL,
-      PRIMARY KEY (game_id, side)
-    ))sql",
-    R"sql(
-    CREATE TABLE IF NOT EXISTS moves (
-      id bigserial PRIMARY KEY,
-      game_id uuid NOT NULL REFERENCES games (id) ON DELETE CASCADE,
-      move_no integer NOT NULL,
-      player_side text NOT NULL CHECK (player_side IN ('white', 'black')),
-      from_cell integer NOT NULL CHECK (from_cell BETWEEN 0 AND 63),
-      to_cell integer NOT NULL CHECK (to_cell BETWEEN 0 AND 63),
-      created_at timestamptz NOT NULL DEFAULT now(),
-      UNIQUE (game_id, move_no)
-    ))sql",
-    R"sql(
-    CREATE TABLE IF NOT EXISTS outbox_events (
-      sequence bigserial PRIMARY KEY,
-      event_id uuid NOT NULL UNIQUE DEFAULT gen_random_uuid(),
-      game_id uuid NOT NULL,
-      type text NOT NULL,
-      request_id text NOT NULL,
-      data jsonb NOT NULL DEFAULT '{}',
-      created_at timestamptz NOT NULL DEFAULT now()
-    ))sql",
-    "ALTER TABLE games ADD COLUMN IF NOT EXISTS capture_from integer "
-    "CHECK (capture_from BETWEEN 0 AND 63)",
-    "ALTER TABLE games ADD COLUMN IF NOT EXISTS captured_cells jsonb NOT NULL DEFAULT '[]' "
-    "CHECK (jsonb_typeof(captured_cells) = 'array')",
-    "ALTER TABLE moves ADD COLUMN IF NOT EXISTS captured_cell integer "
-    "CHECK (captured_cell BETWEEN 0 AND 63)",
-    "ALTER TABLE moves ADD COLUMN IF NOT EXISTS promoted boolean NOT NULL DEFAULT false",
-    // Existing games from the earlier one-step rules may have uncrowned men
-    // on their promotion rank. Preserve those games, without touching the
-    // opposing men initially placed on the same rank.
-    "UPDATE games SET board = regexp_replace(substr(board, 1, 8), 'w', 'W', 'g') "
-    "|| substr(board, 9, 48) || regexp_replace(substr(board, 57, 8), 'b', 'B', 'g'), "
-    "version = version + 1, updated_at = now() "
-    "WHERE substr(board, 1, 8) LIKE '%w%' OR substr(board, 57, 8) LIKE '%b%'",
-};
 
 constexpr char kSelectGame[] =
     "SELECT id::text, status, board, current_turn, winner, version, capture_from, captured_cells "
@@ -319,8 +265,14 @@ GameApi::GameApi(drogon::orm::DbClientPtr db,
       redis_(std::move(redis)),
       cache_ttl_seconds_(cache_ttl_seconds) {}
 
-void GameApi::CreateSchema() {
-  for (const char* statement : kSchema) db_->execSqlSync(statement);
+void GameApi::CreateSchema(const std::string& path) {
+  std::ifstream file(path);
+  if (!file) throw std::runtime_error("cannot open SQL schema: " + path);
+  const std::string schema{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
+  if (file.bad() || schema.find_first_not_of(" \t\r\n") == std::string::npos) {
+    throw std::runtime_error("SQL schema is unreadable or empty: " + path);
+  }
+  db_->execSqlSync(schema);
 }
 
 void GameApi::RegisterRoutes() {

@@ -32,6 +32,8 @@ USER 10001:10001
 
 FROM runtime AS game-api
 COPY --from=build /out/game-api /usr/local/bin/game-api
+COPY infrastructure/postgres/schema.sql /usr/local/share/mini-checkers/schema.sql
+ENV POSTGRES_SCHEMA_FILE=/usr/local/share/mini-checkers/schema.sql
 EXPOSE 8000
 ENTRYPOINT ["/usr/local/bin/game-api"]
 
