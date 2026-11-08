@@ -190,6 +190,78 @@ def trace_requests(browser):
     """)
 
 
+def seed_position(game, pieces, turn="white"):
+    # Arrange only a NEW game created by this browser test; there is no
+    # position-editing endpoint in the application.
+    board = ["."] * 64
+    for row, col, piece in pieces:
+        assert (row + col) % 2 and piece in "wbWB"
+        board[row * 8 + col] = piece
+    subprocess.run(["docker", "compose", "exec", "-T", "postgres", "psql", "-X",
+                    "-v", "ON_ERROR_STOP=1", "-U", "mini_checkers", "-d", "mini_checkers",
+                    "-c", f"UPDATE games SET board = '{''.join(board)}', current_turn = '{turn}', "
+                    f"version = version + 1 WHERE id = '{game}'"],
+                   cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
+    subprocess.run(["docker", "compose", "exec", "-T", "redis", "redis-cli", "DEL", f"game:{game}"],
+                   cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
+
+
+def capture_checks(b, url):
+    white = b.new_tab(url)
+    b.click("#create")
+    b.wait("document.querySelector('#game-status').textContent === 'Ожидание игрока'")
+    game = b.js("return document.querySelector('#game-id').value")
+    black = b.new_tab(url)
+    b.fill("#connect-id", game)
+    b.click("#join")
+    b.wait("document.querySelector('#player-side').textContent === 'Чёрные'")
+    seed_position(game, [(2, 1, "w"), (5, 0, "w"), (1, 2, "b"), (3, 6, "b")])
+    b.switch(white)
+    b.wait("document.querySelector('#game-version').textContent === '3'")
+    assert b.js("return document.querySelector('[data-row=\"5\"][data-col=\"0\"]').disabled")
+    b.click('[data-row="2"][data-col="1"]')
+    b.click('[data-row="0"][data-col="3"]')
+    b.wait("document.querySelector('#turn-badge').textContent === 'Продолжите бой'")
+    assert b.js("return document.querySelectorAll('.piece.king').length === 1 && document.querySelectorAll('.cell.captured').length === 1")
+    b.command("POST", "/refresh", {})
+    b.wait("document.querySelector('#turn-badge').textContent === 'Продолжите бой'")
+    assert b.js("return document.querySelector('.selected').dataset.row === '0' && document.querySelector('.selected').dataset.col === '3'")
+    assert b.js("return document.querySelector('[data-row=\"5\"][data-col=\"0\"]').disabled")
+    Path("/tmp/opencode/t01-capture.png").write_bytes(base64.b64decode(b.command("GET", "/screenshot")))
+    b.click('[data-row="4"][data-col="7"]')
+    b.wait("document.querySelector('#game-status').textContent === 'Завершена'")
+    assert b.js("return document.querySelector('#turn-status').textContent === 'Победили белые' && document.querySelectorAll('.cell.captured').length === 0")
+    b.switch(black)
+    b.wait("document.querySelector('#game-status').textContent === 'Завершена'")
+    print("PASS captures UI: compulsory capture, promotion during chain, forced selection after reload, ghost removal, automatic win")
+
+    b.switch(white)
+    b.click("#create")
+    b.wait("document.querySelector('#game-status').textContent === 'Ожидание игрока'")
+    game = b.js("return document.querySelector('#game-id').value")
+    b.switch(black)
+    b.fill("#connect-id", game)
+    b.click("#join")
+    b.wait("document.querySelector('#game-id').value === " + json.dumps(game))
+    seed_position(game, [(6, 1, "b"), (4, 7, "w")], "black")
+    b.click("#refresh")
+    b.wait("document.querySelector('#game-version').textContent === '3'")
+    b.click('[data-row="6"][data-col="1"]')
+    b.click('[data-row="7"][data-col="0"]')
+    b.wait("document.querySelector('[data-row=\"7\"][data-col=\"0\"] .piece.black.king') !== null")
+    b.switch(white)
+    b.wait("document.querySelector('#game-version').textContent === '4'")
+    b.click('[data-row="4"][data-col="7"]')
+    b.click('[data-row="3"][data-col="6"]')
+    b.wait("document.querySelector('#game-version').textContent === '5'")
+    b.switch(black)
+    b.wait("document.querySelector('#game-version').textContent === '5'")
+    b.click('[data-row="7"][data-col="0"]')
+    b.click('[data-row="4"][data-col="3"]')
+    b.wait("document.querySelector('[data-row=\"4\"][data-col=\"3\"] .piece.black.king') !== null")
+    print("PASS captures UI: black promotion and distant king move through the real API")
+
+
 def browser_checks(browser, url, screenshot):
     b = browser
     white = b.new_tab(url)
@@ -352,6 +424,7 @@ def main():
             browser.command("POST", "/window/rect", {"width": 1280, "height": 1100})
             screenshot = Path(os.environ.get("UI_SCREENSHOT", "/tmp/opencode/t01-ui.png"))
             browser_checks(browser, url, screenshot)
+            capture_checks(browser, url)
             print(f"PASS browser scenarios; screenshot: {screenshot}")
     finally:
         if browser:
