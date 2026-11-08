@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Playing instructions for mandatory captures and kings in the README.
 - Canonical PostgreSQL schema SQL file loaded by the API at startup and included in its Docker image.
 - Disposable-database checks for schema initialization, idempotency, legacy upgrades, and image resource consistency.
+- Firewall fault demonstration that blocks required API-to-PostgreSQL traffic and verifies errors, rollback, and recovery.
 
 ### Fixed
 
