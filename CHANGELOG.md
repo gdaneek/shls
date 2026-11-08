@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PostgreSQL storage, Redis cache-aside reads with invalidation on writes, and RabbitMQ events with publisher confirms.
 - `scripts/test-integration.sh` check of the database, cache, and broker flows; the startup check covers Event Worker.
 - API description in the README.
+- Network segments `public`, `data`, and `messaging` with a fixed IP plan; `data` and `messaging` are internal.
 
 ### Fixed
 
