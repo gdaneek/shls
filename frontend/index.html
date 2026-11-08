@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mini Checkers — шашки вдвоём</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="page-header">
+    <a class="brand" href="/" aria-label="Mini Checkers — главная"><span class="brand-mark" aria-hidden="true">●</span> Mini Checkers</a>
+    <span class="header-note">Шашки для двоих</span>
+  </header>
+
+  <main>
+    <section class="intro">
+      <p class="eyebrow">Одна доска. Два игрока.</p>
+      <h1>Ваш ход.</h1>
+      <p>Создайте партию, пригласите второго игрока и играйте прямо в браузере.</p>
+    </section>
+
+    <div class="layout">
+      <aside class="sidebar" aria-label="Управление игрой">
+        <section class="card">
+          <h2>Начать партию</h2>
+          <button id="create" class="primary wide" type="button">Создать игру</button>
+          <div class="divider"><span>или введите ID игры</span></div>
+          <form id="connect-form">
+            <label for="connect-id">Идентификатор игры</label>
+            <input id="connect-id" name="game" type="text" maxlength="36" placeholder="ID от второго игрока" required autocomplete="off" autocapitalize="off" spellcheck="false">
+            <div class="button-row">
+              <button id="join" class="primary" type="submit">Присоединиться</button>
+              <button id="open" type="submit">Смотреть</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>Текущая партия</h2>
+          <label for="game-id">Передайте этот ID сопернику</label>
+          <input id="game-id" type="text" readonly placeholder="Сначала создайте или откройте игру" aria-label="ID текущей игры">
+          <div class="button-row small-actions">
+            <button id="copy-id" type="button" disabled>Скопировать ID</button>
+            <a href="/" target="_blank" rel="noopener noreferrer">Вторая вкладка ↗</a>
+          </div>
+          <dl class="game-details">
+            <div><dt>Вы играете</dt><dd id="player-side">—</dd></div>
+            <div><dt>Состояние</dt><dd id="game-status">Нет игры</dd></div>
+            <div><dt>Версия</dt><dd id="game-version">—</dd></div>
+          </dl>
+          <div class="button-row">
+            <button id="refresh" type="button" disabled>Обновить</button>
+            <button id="finish" class="danger" type="button" disabled>Сдаться</button>
+          </div>
+        </section>
+        <p class="privacy-note">Ключ игрока сохраняется только в этой вкладке. Не закрывайте её до окончания партии. Во второй вкладке нажмите «Присоединиться».</p>
+        <p id="storage-warning" class="storage-warning" hidden>Хранилище вкладки недоступно. После перезагрузки ключ игрока будет потерян.</p>
+      </aside>
+
+      <section class="card board-card" aria-label="Игровая доска">
+        <div class="board-heading">
+          <div><p class="eyebrow">Партия</p><h2 id="turn-status" aria-live="polite">Доска ждёт игроков</h2></div>
+          <span id="turn-badge" class="badge">Не начата</span>
+        </div>
+        <p id="message" class="message" role="status" aria-live="polite">Создайте игру или присоединитесь по ID.</p>
+        <div class="board-frame">
+          <div class="columns" aria-hidden="true"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
+          <div class="rows" aria-hidden="true"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
+          <div id="board" class="board" aria-label="Доска 8 на 8; координаты — строка и столбец"></div>
+        </div>
+        <p id="move-hint" class="move-hint">Выберите свою шашку, затем подсвеченную клетку.</p>
+        <div class="rules">
+          <strong>Упрощённые правила</strong>
+          <p>Белые начинают и идут к строке 0, чёрные — к строке 7. Ход: одна клетка по диагонали вперёд. Без взятий и дамок.</p>
+          <p>После хода соперника нажмите <strong>«Обновить»</strong>. Оба игрока видят доску с одной стороны.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer>Mini Checkers · Простые шашки, настоящая партия.</footer>
+</body>
+</html>
