@@ -1,6 +1,6 @@
 #!/usr/sbin/nft -f
 # Mini Checkers firewall: filters traffic between containers inside the
-# internal segments (Docker bridges mc-data and mc-msg). Everything that is
+# application segments (Docker bridges mc-public, mc-data and mc-msg). Everything that is
 # not explicitly allowed below is logged and dropped.
 #
 # The bridge family sees frames switched inside a bridge without
@@ -11,10 +11,13 @@
 # Apply: infrastructure/firewall/firewall.sh apply
 # The file replaces the whole table atomically, so it can be re-applied.
 
+define PUBLIC_BRIDGE = "mc-public"
 define DATA_BRIDGE = "mc-data"
 define MESSAGING_BRIDGE = "mc-msg"
 
 # IP plan, must match docker-compose.yml.
+define FRONTEND = 10.10.1.3
+define GAME_API_PUBLIC = 10.10.1.2
 define GAME_API_DATA = 10.10.2.2
 define POSTGRES = 10.10.2.3
 define REDIS = 10.10.2.4
@@ -30,13 +33,14 @@ table bridge mini_checkers {
     type filter hook forward priority filter; policy accept;
 
     # Other bridges on the host are not ours: leave them alone.
-    meta ibrname != { $DATA_BRIDGE, $MESSAGING_BRIDGE } accept
+    meta ibrname != { $PUBLIC_BRIDGE, $DATA_BRIDGE, $MESSAGING_BRIDGE } accept
 
     # Address resolution and replies to allowed connections.
     ether type arp accept
     ct state established,related accept
 
     # Explicit ALLOW rules (new TCP connections only).
+    meta ibrname $PUBLIC_BRIDGE ip saddr $FRONTEND ip daddr $GAME_API_PUBLIC tcp dport 8000 ct state new counter accept comment "ALLOW frontend -> game-api"
     meta ibrname $DATA_BRIDGE ip saddr $GAME_API_DATA ip daddr $POSTGRES tcp dport 5432 ct state new counter accept comment "ALLOW game-api -> postgres"
     meta ibrname $DATA_BRIDGE ip saddr $GAME_API_DATA ip daddr $REDIS tcp dport 6379 ct state new counter accept comment "ALLOW game-api -> redis"
     meta ibrname $MESSAGING_BRIDGE ip saddr $GAME_API_MESSAGING ip daddr $RABBITMQ tcp dport 5672 ct state new counter accept comment "ALLOW game-api -> rabbitmq"
@@ -44,6 +48,6 @@ table bridge mini_checkers {
 
     # Explicit DENY: everything else inside the segments.
     limit rate 10/second burst 20 packets log prefix "mc-fw-drop: " level info
-    counter drop comment "DENY everything else in mc-data / mc-msg"
+    counter drop comment "DENY everything else in mc-public / mc-data / mc-msg"
   }
 }

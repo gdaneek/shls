@@ -17,6 +17,7 @@ firewall="${FIREWALL:-on}"
 failures=0
 
 GAME_API_PUBLIC=10.10.1.2
+FRONTEND=10.10.1.3
 GAME_API_DATA=10.10.2.2
 POSTGRES=10.10.2.3
 REDIS=10.10.2.4
@@ -25,8 +26,14 @@ RABBITMQ=10.10.3.3
 
 probe() {
   local service="$1" ip="$2" port="$3" output code
-  output="$(docker compose exec -T "$service" bash -c \
-    "timeout 3 bash -c 'exec 3<>/dev/tcp/$ip/$port' 2>&1; echo \"code=\$?\"")"
+  # The Alpine frontend has nc but no bash; other containers use /dev/tcp.
+  if [[ "$service" == frontend ]]; then
+    output="$(docker compose exec -T frontend sh -c \
+      "timeout 3 nc -z -v -w 5 $ip $port 2>&1; echo \"code=\$?\"")"
+  else
+    output="$(docker compose exec -T "$service" bash -c \
+      "timeout 3 bash -c 'exec 3<>/dev/tcp/$ip/$port' 2>&1; echo \"code=\$?\"")"
+  fi
   code="${output##*code=}"
   if [[ "$code" == 0 ]]; then
     echo OPEN
@@ -66,12 +73,14 @@ echo "firewall expected: $firewall"
 drops_before="$(drop_counter)"
 
 echo "--- explicit ALLOW (same segment, listed in the firewall)"
+expect frontend "$GAME_API_PUBLIC" 8000 OPEN OPEN "front>api"
 expect game-api "$POSTGRES" 5432 OPEN OPEN "game-api>pg"
 expect game-api "$REDIS" 6379 OPEN OPEN "game-api>redis"
 expect game-api "$RABBITMQ" 5672 OPEN OPEN "game-api>mq"
 expect event-worker "$RABBITMQ" 5672 OPEN OPEN "worker>mq"
 
 echo "--- explicit DENY (same segment, dropped by the firewall)"
+expect game-api "$FRONTEND" 8080 FILTERED OPEN "api>front"
 expect event-worker "$GAME_API_MESSAGING" 8000 FILTERED OPEN "worker>api"
 expect rabbitmq "$GAME_API_MESSAGING" 8000 FILTERED OPEN "mq>api"
 expect redis "$POSTGRES" 5432 FILTERED OPEN "redis>pg"
@@ -86,7 +95,7 @@ expect redis "$RABBITMQ" 5672 UNREACHABLE UNREACHABLE "redis>mq"
 expect postgres "$GAME_API_PUBLIC" 8000 UNREACHABLE UNREACHABLE "pg>api-public"
 
 echo "--- perimeter (host)"
-for service in postgres redis rabbitmq event-worker; do
+for service in game-api postgres redis rabbitmq event-worker; do
   if [[ -z "$(docker port "$(docker compose ps -q "$service")")" ]]; then
     echo "PASS  $service has no ports published on the host"
   else
@@ -94,11 +103,11 @@ for service in postgres redis rabbitmq event-worker; do
     failures=$((failures + 1))
   fi
 done
-published="$(docker compose port game-api 8000)"
+published="$(docker compose port frontend 8080)"
 if [[ "$published" == 127.0.0.1:* ]]; then
-  echo "PASS  game-api is published only on loopback ($published)"
+  echo "PASS  frontend is published only on loopback ($published)"
 else
-  echo "FAIL  game-api is published on $published"
+  echo "FAIL  frontend is published on $published"
   failures=$((failures + 1))
 fi
 
