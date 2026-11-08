@@ -10,13 +10,25 @@ Mini Checkers — небольшой онлайн-сервис для игры �
 
 ```bash
 cp .env.example .env    # если .env ещё нет; задайте свои пароли
+infrastructure/firewall/firewall.sh apply    # Linux, нужен sudo для nft
 docker compose up --build --wait --wait-timeout 180
 curl http://127.0.0.1:8000/hello    # {"message":"hello-world"}
 bash scripts/test-startup.sh
 bash scripts/test-integration.sh    # нужен jq; перезапускает event-worker и redis
+bash scripts/test-network.sh        # сегментация и firewall
 ```
 
 Наружу публикуется только API на `127.0.0.1:${API_PORT:-8000}`. Остановка — `docker compose down`, удаление данных вместе с томами — `docker compose down -v`.
+
+## Сеть и firewall
+
+| Сегмент | Подсеть | Мост | Сервисы |
+|---|---|---|---|
+| `public` | `10.10.1.0/24` | `mc-public` | game-api `.2` (порт 8000 опубликован на `127.0.0.1`) |
+| `data` (internal) | `10.10.2.0/24` | `mc-data` | game-api `.2`, postgres `.3`, redis `.4` |
+| `messaging` (internal) | `10.10.3.0/24` | `mc-msg` | game-api `.2`, rabbitmq `.3`, event-worker `.4` |
+
+Между сегментами маршрута нет. Внутри `data` и `messaging` трафик фильтрует таблица nftables `bridge mini_checkers` ([`infrastructure/firewall/mini-checkers.nft`](infrastructure/firewall/mini-checkers.nft)): разрешены только game-api → postgres:5432, game-api → redis:6379, game-api → rabbitmq:5672 и event-worker → rabbitmq:5672, остальное логируется (`mc-fw-drop:`) и отбрасывается. Управление: `infrastructure/firewall/firewall.sh apply|rollback|status`. Правила не сохраняются после перезагрузки хоста — их нужно применить заново, лучше до `docker compose up`.
 
 ## API
 
