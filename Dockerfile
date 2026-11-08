@@ -17,7 +17,8 @@ COPY services ./services
 # builds, so a code change does not re-clone and rebuild Drogon.
 RUN --mount=type=cache,target=/build,sharing=locked \
     cmake -S . -B /build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
-    && cmake --build /build --target game-api event-worker --parallel "$(nproc)" \
+    && cmake --build /build --target game-api event-worker game-rules-test --parallel "$(nproc)" \
+    && /build/services/game-api/game-rules-test \
     && mkdir -p /out \
     && cp /build/services/game-api/game-api /build/services/event-worker/event-worker /out/
 
