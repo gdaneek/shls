@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Browser coverage for automatic synchronization, preserved selection/input, polling recovery, and terminal-state pause.
 - Updated playing instructions for automatic board refresh.
 - Russian-checkers captures and flying kings with durable continuation state, immediate promotion, and automatic victory.
+- Server-driven legal-move highlights, forced capture selection, king markers, and deferred capture removal in the web interface.
 
 ### Fixed
 
