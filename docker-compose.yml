@@ -19,6 +19,13 @@ services:
       RABBITMQ_USER: mini_checkers
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
       EVENTS_QUEUE: game.events
+    networks:
+      public:
+        ipv4_address: 10.10.1.2
+      data:
+        ipv4_address: 10.10.2.2
+      messaging:
+        ipv4_address: 10.10.3.2
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,6 +56,9 @@ services:
       RABBITMQ_USER: mini_checkers
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
       EVENTS_QUEUE: game.events
+    networks:
+      messaging:
+        ipv4_address: 10.10.3.4
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -66,6 +76,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    networks:
+      data:
+        ipv4_address: 10.10.2.3
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "mini_checkers", "-d", "mini_checkers"]
       interval: 10s
@@ -76,6 +89,9 @@ services:
     image: redis:7.4-bookworm
     # Cache only: PostgreSQL is the source of truth, so no persistence.
     command: ["redis-server", "--save", "", "--appendonly", "no"]
+    networks:
+      data:
+        ipv4_address: 10.10.2.4
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -91,6 +107,9 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      messaging:
+        ipv4_address: 10.10.3.3
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
@@ -101,3 +120,31 @@ services:
 volumes:
   postgres-data:
   rabbitmq-data:
+
+# Network segments. Fixed subnets, addresses and bridge names are referenced
+# by the firewall rules in infrastructure/firewall/mini-checkers.nft.
+# data and messaging are internal: no gateway, no route to other segments.
+networks:
+  public:
+    driver_opts:
+      com.docker.network.bridge.name: mc-public
+    ipam:
+      config:
+        - subnet: 10.10.1.0/24
+          gateway: 10.10.1.1
+  data:
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.name: mc-data
+    ipam:
+      config:
+        - subnet: 10.10.2.0/24
+          gateway: 10.10.2.1
+  messaging:
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.name: mc-msg
+    ipam:
+      config:
+        - subnet: 10.10.3.0/24
+          gateway: 10.10.3.1
