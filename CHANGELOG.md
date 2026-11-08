@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API description in the README.
 - Network segments `public`, `data`, and `messaging` with a fixed IP plan; `data` and `messaging` are internal.
 - nftables bridge firewall for the internal segments with explicit ALLOW rules and a logged default DENY.
+- `scripts/test-network.sh` check of allowed, firewall-denied, and segmentation-denied connections.
 
 ### Fixed
 
