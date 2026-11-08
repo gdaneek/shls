@@ -16,7 +16,7 @@ has_table() { "${nft[@]}" list table $table >/dev/null 2>&1; }
 
 case "${1:-}" in
   apply)
-    for bridge in mc-data mc-msg; do
+    for bridge in mc-public mc-data mc-msg; do
       ip link show "$bridge" >/dev/null 2>&1 ||
         echo "note: bridge $bridge does not exist yet; rules apply once the stack is up"
     done

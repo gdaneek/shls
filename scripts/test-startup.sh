@@ -49,25 +49,29 @@ redis_ping() {
   [[ "$(docker compose exec -T redis redis-cli ping)" == "PONG" ]]
 }
 
-for service in game-api event-worker postgres redis rabbitmq; do
+for service in frontend game-api event-worker postgres redis rabbitmq; do
   check "$service container is healthy" is_healthy "$service"
 done
 
 check "game-api GET /hello returns hello-world" hello_in_container
+check "frontend serves HTML" docker compose exec -T frontend \
+  wget -q -O /dev/null http://127.0.0.1:8080/
+check "frontend proxies API requests" docker compose exec -T frontend \
+  wget -q -O /dev/null http://127.0.0.1:8080/api/hello
 check "postgres executes SELECT 1" postgres_query
 check "redis answers PONG" redis_ping
 check "rabbitmq AMQP listener accepts connections" \
   docker compose exec -T rabbitmq rabbitmq-diagnostics -q check_port_connectivity
 
-for service in postgres redis rabbitmq event-worker; do
+for service in game-api postgres redis rabbitmq event-worker; do
   check "$service has no ports published on the host" not_published "$service"
 done
 
 # Host access is informational: a VPN or local firewall may block it.
-api_port="$(docker compose port game-api 8000 2>/dev/null | awk -F: '{print $NF}')"
+api_port="$(docker compose port frontend 8080 2>/dev/null | awk -F: '{print $NF}')"
 if [[ -n "$api_port" ]] &&
-  host_reply="$(curl -fsS --max-time 3 "http://127.0.0.1:${api_port}/hello" 2>/dev/null)"; then
-  echo "INFO  host request to 127.0.0.1:${api_port}/hello -> ${host_reply}"
+  host_reply="$(curl -fsS --max-time 3 "http://127.0.0.1:${api_port}/api/hello" 2>/dev/null)"; then
+  echo "INFO  host request to 127.0.0.1:${api_port}/api/hello -> ${host_reply}"
 else
   echo "INFO  host request to the published API port failed (check VPN/firewall)"
 fi

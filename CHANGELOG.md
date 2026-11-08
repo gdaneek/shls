@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SLI/SLO acceptance checks for correct reads, p95 latency, and timely event processing.
 - Documented SLI/SLO acceptance objectives and successful firewall-enabled verification.
 - Browser game interface with an interactive board, tab-local player credentials, spectator mode, and manual refresh.
+- Unprivileged frontend container with a same-origin API proxy, a private backend port, and explicit frontend firewall rules.
 
 ### Fixed
 
