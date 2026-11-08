@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
-#include <ctime>
 #include <exception>
 #include <stdexcept>
 #include <utility>
@@ -49,6 +48,16 @@ constexpr std::array kSchema = {
       created_at timestamptz NOT NULL DEFAULT now(),
       UNIQUE (game_id, move_no)
     ))sql",
+    R"sql(
+    CREATE TABLE IF NOT EXISTS outbox_events (
+      sequence bigserial PRIMARY KEY,
+      event_id uuid NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+      game_id uuid NOT NULL,
+      type text NOT NULL,
+      request_id text NOT NULL,
+      data jsonb NOT NULL DEFAULT '{}',
+      created_at timestamptz NOT NULL DEFAULT now()
+    ))sql",
 };
 
 constexpr char kSelectGame[] =
@@ -59,9 +68,11 @@ constexpr char kCreateGame[] = R"sql(
     WITH created AS (
       INSERT INTO games (status, board, current_turn)
       VALUES ('waiting', $1, 'white')
-      RETURNING id)
-    INSERT INTO game_players (game_id, side, token_hash)
-    SELECT id, 'white', $2 FROM created
+      RETURNING id), player AS (
+      INSERT INTO game_players (game_id, side, token_hash)
+      SELECT id, 'white', $2 FROM created RETURNING game_id)
+    INSERT INTO outbox_events (game_id, type, request_id)
+    SELECT game_id, 'game.created', $3 FROM player
     RETURNING game_id::text)sql";
 
 constexpr char kJoinGame[] = R"sql(
@@ -69,9 +80,11 @@ constexpr char kJoinGame[] = R"sql(
       UPDATE games SET status = 'active', version = version + 1,
                        updated_at = now()
       WHERE id = $1::uuid AND status = 'waiting'
-      RETURNING id)
-    INSERT INTO game_players (game_id, side, token_hash)
-    SELECT id, 'black', $2 FROM joined
+      RETURNING id), player AS (
+      INSERT INTO game_players (game_id, side, token_hash)
+      SELECT id, 'black', $2 FROM joined RETURNING game_id)
+    INSERT INTO outbox_events (game_id, type, request_id)
+    SELECT game_id, 'player.joined', $3 FROM player
     RETURNING game_id)sql";
 
 // The version check makes the update atomic with respect to concurrent moves:
@@ -81,18 +94,30 @@ constexpr char kMakeMove[] = R"sql(
       UPDATE games SET board = $2, current_turn = $3, version = version + 1,
                        updated_at = now()
       WHERE id = $1::uuid AND version = $4 AND status = 'active'
-      RETURNING id)
-    INSERT INTO moves (game_id, move_no, player_side, from_cell, to_cell)
-    SELECT id, (SELECT count(*) + 1 FROM moves WHERE game_id = $1::uuid)::int,
-           $5, $6, $7
-    FROM updated
-    RETURNING move_no)sql";
+      RETURNING id), moved AS (
+      INSERT INTO moves (game_id, move_no, player_side, from_cell, to_cell)
+      SELECT id, (SELECT count(*) + 1 FROM moves WHERE game_id = $1::uuid)::int,
+             $5, $6, $7 FROM updated RETURNING game_id, move_no), event AS (
+      INSERT INTO outbox_events (game_id, type, request_id, data)
+      SELECT game_id, 'move.made', $8,
+             jsonb_build_object('move_no', move_no, 'side', $5::text,
+               'from', jsonb_build_array($6::int / 8, $6::int % 8),
+               'to', jsonb_build_array($7::int / 8, $7::int % 8),
+               'version', $4::int + 1)
+      FROM moved)
+    SELECT move_no FROM moved)sql";
 
 constexpr char kFinishGame[] = R"sql(
+    WITH finished AS (
     UPDATE games SET status = 'finished', winner = NULLIF($2, ''),
                      version = version + 1, updated_at = now()
     WHERE id = $1::uuid AND version = $3 AND status <> 'finished'
-    RETURNING version)sql";
+    RETURNING id, version, winner), event AS (
+      INSERT INTO outbox_events (game_id, type, request_id, data)
+      SELECT id, 'game.finished', $4,
+             jsonb_build_object('winner', winner, 'version', version)
+      FROM finished)
+    SELECT version FROM finished)sql";
 
 struct GameState {
   std::string id;
@@ -204,28 +229,12 @@ std::string RequestId(const drogon::HttpRequestPtr& request) {
   return valid ? header : drogon::utils::getUuid();
 }
 
-std::string NowUtc() {
-  const std::time_t now = std::time(nullptr);
-  std::tm utc{};
-  gmtime_r(&now, &utc);
-  char buffer[sizeof("2026-01-01T00:00:00Z")];
-  std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%SZ", &utc);
-  return buffer;
-}
-
 std::optional<Cell> ParseCell(const Json::Value& value) {
   if (!value.isArray() || value.size() != 2 || !value[0].isInt() ||
       !value[1].isInt()) {
     return std::nullopt;
   }
   return Cell{value[0].asInt(), value[1].asInt()};
-}
-
-Json::Value CellJson(Cell cell) {
-  Json::Value json(Json::arrayValue);
-  json.append(cell.row);
-  json.append(cell.col);
-  return json;
 }
 
 Json::Value PlayerJoined(const std::string& game_id, Side side,
@@ -240,11 +249,10 @@ Json::Value PlayerJoined(const std::string& game_id, Side side,
 }  // namespace
 
 GameApi::GameApi(drogon::orm::DbClientPtr db,
-                 drogon::nosql::RedisClientPtr redis, EventPublisher& publisher,
+                 drogon::nosql::RedisClientPtr redis,
                  int cache_ttl_seconds)
     : db_(std::move(db)),
       redis_(std::move(redis)),
-      publisher_(publisher),
       cache_ttl_seconds_(cache_ttl_seconds) {}
 
 void GameApi::CreateSchema() {
@@ -291,13 +299,13 @@ Task<GameApi::Response> GameApi::CreateGame(Request request) {
   std::string game_id;
   try {
     auto result =
-        co_await db_->execSqlCoro(kCreateGame, InitialBoard(), HashToken(token));
+        co_await db_->execSqlCoro(kCreateGame, InitialBoard(), HashToken(token),
+                                 request_id);
     game_id = result[0]["game_id"].as<std::string>();
   } catch (const drogon::orm::DrogonDbException& error) {
     co_return ServiceUnavailable(error.base().what());
   }
   co_await InvalidateCache(game_id);
-  PublishEvent("game.created", game_id, request_id, Json::objectValue);
   LOG_INFO << "game created game_id=" << game_id
            << " request_id=" << request_id;
   co_return JsonResponse(drogon::k201Created,
@@ -312,7 +320,7 @@ Task<GameApi::Response> GameApi::JoinGame(Request request,
   const std::string token = NewPlayerToken();
   try {
     auto joined =
-        co_await db_->execSqlCoro(kJoinGame, *game_id, HashToken(token));
+        co_await db_->execSqlCoro(kJoinGame, *game_id, HashToken(token), request_id);
     if (joined.empty()) {
       auto existing = co_await db_->execSqlCoro(kSelectGame, *game_id);
       if (existing.empty()) co_return GameNotFound();
@@ -323,7 +331,6 @@ Task<GameApi::Response> GameApi::JoinGame(Request request,
     co_return ServiceUnavailable(error.base().what());
   }
   co_await InvalidateCache(*game_id);
-  PublishEvent("player.joined", *game_id, request_id, Json::objectValue);
   LOG_INFO << "player joined game_id=" << *game_id
            << " request_id=" << request_id;
   co_return JsonResponse(drogon::k200OK,
@@ -428,7 +435,7 @@ Task<GameApi::Response> GameApi::MakeMove(Request request,
     const std::string next_turn(SideName(Opponent(*side)));
     auto moved = co_await db_->execSqlCoro(
         kMakeMove, *game_id, board, next_turn, game.version,
-        mover, CellIndex(*from), CellIndex(*to));
+        mover, CellIndex(*from), CellIndex(*to), request_id);
     if (moved.empty()) {
       co_return ErrorResponse(drogon::k409Conflict,
                               "the game was changed by another request, "
@@ -443,13 +450,6 @@ Task<GameApi::Response> GameApi::MakeMove(Request request,
   }
 
   co_await InvalidateCache(*game_id);
-  Json::Value data;
-  data["move_no"] = move_no;
-  data["side"] = mover;
-  data["from"] = CellJson(*from);
-  data["to"] = CellJson(*to);
-  data["version"] = game.version;
-  PublishEvent("move.made", *game_id, request_id, data);
   LOG_INFO << "move made game_id=" << *game_id << " move_no=" << move_no
            << " request_id=" << request_id;
   co_return JsonResponse(drogon::k200OK, ToJson(game));
@@ -485,7 +485,7 @@ Task<GameApi::Response> GameApi::FinishGame(Request request,
     const std::string winner =
         game.status == "active" ? std::string(SideName(Opponent(*side))) : "";
     auto finished = co_await db_->execSqlCoro(kFinishGame, *game_id, winner,
-                                              game.version);
+                                              game.version, request_id);
     if (finished.empty()) {
       co_return ErrorResponse(drogon::k409Conflict,
                               "the game was changed by another request, "
@@ -499,11 +499,6 @@ Task<GameApi::Response> GameApi::FinishGame(Request request,
   }
 
   co_await InvalidateCache(*game_id);
-  Json::Value data;
-  data["winner"] =
-      game.winner.empty() ? Json::Value() : Json::Value(game.winner);
-  data["version"] = game.version;
-  PublishEvent("game.finished", *game_id, request_id, data);
   LOG_INFO << "game finished game_id=" << *game_id
            << " request_id=" << request_id;
   co_return JsonResponse(drogon::k200OK, ToJson(game));
@@ -528,19 +523,6 @@ Task<> GameApi::InvalidateCache(const std::string& game_id) {
     LOG_WARN << "Redis invalidation failed for game_id=" << game_id << ": "
              << error.what();
   }
-}
-
-void GameApi::PublishEvent(const std::string& type, const std::string& game_id,
-                           const std::string& request_id, Json::Value data) {
-  const std::string event_id = drogon::utils::getUuid();
-  Json::Value event;
-  event["event_id"] = event_id;
-  event["type"] = type;
-  event["game_id"] = game_id;
-  event["request_id"] = request_id;
-  event["occurred_at"] = NowUtc();
-  event["data"] = std::move(data);
-  publisher_.Publish(type, event_id, Serialize(event));
 }
 
 }  // namespace mini_checkers

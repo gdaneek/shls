@@ -10,7 +10,6 @@
 #include <optional>
 #include <string>
 
-#include "event_publisher.h"
 #include "game_rules.h"
 
 namespace mini_checkers {
@@ -21,7 +20,7 @@ namespace mini_checkers {
 class GameApi {
  public:
   GameApi(drogon::orm::DbClientPtr db, drogon::nosql::RedisClientPtr redis,
-          EventPublisher& publisher, int cache_ttl_seconds);
+          int cache_ttl_seconds);
 
   void CreateSchema();
   void RegisterRoutes();
@@ -39,12 +38,9 @@ class GameApi {
   drogon::Task<std::optional<Side>> FindPlayer(const std::string& game_id,
                                                const std::string& token);
   drogon::Task<> InvalidateCache(const std::string& game_id);
-  void PublishEvent(const std::string& type, const std::string& game_id,
-                    const std::string& request_id, Json::Value data);
 
   drogon::orm::DbClientPtr db_;
   drogon::nosql::RedisClientPtr redis_;
-  EventPublisher& publisher_;
   int cache_ttl_seconds_;
 };
 

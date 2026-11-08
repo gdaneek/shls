@@ -2,6 +2,8 @@ name: mini-checkers
 
 services:
   game-api:
+    restart: unless-stopped
+    stop_grace_period: 30s
     build:
       context: .
       target: game-api
@@ -41,12 +43,15 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8000/hello"]
+      test: ["CMD", "curl", "--fail", "--silent", "--max-time", "6", "http://127.0.0.1:8000/health/ready"]
       interval: 10s
-      timeout: 3s
+      timeout: 7s
+      start_period: 30s
       retries: 5
 
   event-worker:
+    restart: unless-stopped
+    stop_grace_period: 20s
     build:
       context: .
       target: event-worker
@@ -63,12 +68,22 @@ services:
       rabbitmq:
         condition: service_healthy
     read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/event-worker", "--healthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
     cap_drop:
       - ALL
     security_opt:
       - no-new-privileges:true
 
   postgres:
+    restart: unless-stopped
+    stop_grace_period: 30s
     image: postgres:17-bookworm
     environment:
       POSTGRES_DB: mini_checkers
@@ -86,6 +101,7 @@ services:
       retries: 5
 
   redis:
+    restart: unless-stopped
     image: redis:7.4-bookworm
     # Cache only: PostgreSQL is the source of truth, so no persistence.
     command: ["redis-server", "--save", "", "--appendonly", "no"]
@@ -99,6 +115,8 @@ services:
       retries: 5
 
   rabbitmq:
+    restart: unless-stopped
+    stop_grace_period: 30s
     image: rabbitmq:4.1
     # A fixed node name keeps the data in the volume usable after recreation.
     hostname: rabbitmq
