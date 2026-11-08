@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Service restart policies, API liveness/readiness, Worker heartbeat healthcheck, and PostgreSQL outbox for event delivery after recovery (assignment 5).
 - PostgreSQL dump/restore scripts, seven-day retention, and a daily systemd user backup timer.
 - Failure-recovery checks with measured restart times, and backup restore/retention/safety checks.
+- Reliability targets, CLI clarification note, and backup operation instructions in the README.
 
 ### Fixed
 
