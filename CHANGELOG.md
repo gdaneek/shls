@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Browser game controls and frontend startup instructions in the README.
 - Automatic game-state polling with hidden-tab pause, bounded error backoff, serialized requests, and stale-version protection.
 - Browser coverage for automatic synchronization, preserved selection/input, polling recovery, and terminal-state pause.
+- Updated playing instructions for automatic board refresh.
 
 ### Fixed
 
