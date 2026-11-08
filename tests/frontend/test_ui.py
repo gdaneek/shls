@@ -155,6 +155,41 @@ def http_checks(url):
     print("PASS HTTP: static assets, security headers, proxy, 404 and move authorization")
 
 
+def trace_requests(browser):
+    # Test-only fetch instrumentation: no app hooks, tokens or headers recorded.
+    browser.js("""
+      window.__originalFetch ??= window.fetch;
+      const p = window.__pollProbe = {
+        gets: 0, posts: 0, active: 0, max: 0, fail: false, reply: null,
+        delay: 0, hiddenAt: null, hiddenGets: null
+      };
+      window.fetch = async (url, options) => {
+        const method = options?.method || 'GET';
+        p.active++; p.max = Math.max(p.max, p.active);
+        try {
+          if (method === 'GET') {
+            p.gets++;
+            if (p.delay) await new Promise(resolve => setTimeout(resolve, p.delay));
+            if (p.fail) throw new TypeError('Injected offline error');
+            if (p.reply) {
+              const reply = p.reply; p.reply = null;
+              return new Response(JSON.stringify(reply), {status: 200});
+            }
+          } else p.posts++;
+          return await window.__originalFetch(url, options);
+        } finally { p.active--; }
+      };
+      if (!window.__visibilityProbe) {
+        document.addEventListener('visibilitychange', () => {
+          const probe = window.__pollProbe;
+          if (document.hidden) probe.hiddenAt = probe.gets;
+          else if (probe.hiddenAt !== null) probe.hiddenGets = probe.gets - probe.hiddenAt;
+        }, true);
+        window.__visibilityProbe = true;
+      }
+    """)
+
+
 def browser_checks(browser, url, screenshot):
     b = browser
     white = b.new_tab(url)
@@ -190,26 +225,49 @@ def browser_checks(browser, url, screenshot):
     print("PASS UI: second tab has no inherited key and joins as black")
 
     b.switch(white)
-    b.click("#refresh")
     b.wait("document.querySelector('#turn-badge').textContent === 'Ваш ход'")
+    trace_requests(b)
     b.click('[data-row="5"][data-col="0"]')
     assert b.js("return document.querySelectorAll('.cell.legal').length") == 1
+    b.js("window.__selectedCell = document.querySelector('.selected')")
+    b.fill("#connect-id", "draft")
+    b.wait("window.__pollProbe.gets >= 1 && window.__pollProbe.active === 0")
+    assert b.js("return document.querySelector('.selected') === window.__selectedCell && document.querySelector('#connect-id').value === 'draft'")
+    b.fill("#connect-id", game)
+    print("PASS polling: unchanged state preserves selected piece, DOM and form input")
+
+    # Start a manual refresh during a deliberately delayed automatic GET.
+    b.js("window.__pollProbe.delay = 400")
+    b.wait("window.__pollProbe.active === 1")
+    b.click("#refresh")
+    b.wait("!document.querySelector('#refresh').disabled && window.__pollProbe.active === 0")
+    assert b.js("return window.__pollProbe.max") == 1
+    b.js("window.__pollProbe.delay = 0")
+    older_state = json.loads(fetch(url + f"/api/games/{game}")[2])
     screenshot.write_bytes(base64.b64decode(b.command("GET", "/screenshot")))
     b.click('[data-row="4"][data-col="1"]')
     b.wait("document.querySelector('#game-version').textContent === '3'")
-    b.command("POST", "/refresh", {})
-    b.wait("document.querySelector('#game-id').value !== '' && !document.querySelector('#refresh').disabled")
-    assert b.js("return document.querySelector('#player-side').textContent") == "Белые"
     assert b.js("return document.querySelectorAll('.cell:not(:disabled)').length") == 0
-    print("PASS UI: select, legal target, white move, tab reload preserves white, turn enforced")
+    b.js("window.__pollProbe.reply = " + json.dumps(older_state))
+    b.wait("window.__pollProbe.reply === null && window.__pollProbe.active === 0")
+    assert b.js("return document.querySelector('#game-version').textContent") == "3"
+    assert b.js("return window.__pollProbe.max === 1 && window.__pollProbe.posts === 1")
+    print("PASS polling: requests serialized, POST not retried, older cached version ignored")
 
     b.switch(black)
-    b.click("#refresh")
     b.wait("document.querySelector('#turn-badge').textContent === 'Ваш ход'")
     b.click('[data-row="2"][data-col="1"]')
     b.click('[data-row="3"][data-col="0"]')
     b.wait("document.querySelector('#game-version').textContent === '4'")
-    print("PASS UI: black refreshes and makes the next move")
+    time.sleep(3)
+    b.switch(white)
+    b.wait("document.querySelector('#game-version').textContent === '4'")
+    assert b.js("return window.__pollProbe.hiddenGets") == 0
+    b.command("POST", "/refresh", {})
+    b.wait("document.querySelector('#game-id').value !== '' && !document.querySelector('#refresh').disabled")
+    assert b.js("return document.querySelector('#player-side').textContent") == "Белые"
+    b.wait("document.querySelector('#turn-badge').textContent === 'Ваш ход'")
+    print("PASS polling: join and both moves arrive automatically, hidden tab pauses, return refreshes; reload preserves white")
 
     b.new_tab(url)
     b.fill("#connect-id", game)
@@ -227,13 +285,26 @@ def browser_checks(browser, url, screenshot):
     b.wait("document.querySelector('#game-status').textContent === 'Завершена'")
     assert b.js("return document.querySelector('#turn-status').textContent") == "Победили белые"
     b.switch(white)
-    b.click("#refresh")
     b.wait("document.querySelector('#game-status').textContent === 'Завершена'")
     assert b.js("return document.querySelectorAll('.cell:not(:disabled)').length === 0")
-    print("PASS UI: resign confirmation, winner, finished game on both tabs")
+    trace_requests(b)
+    time.sleep(3)
+    assert b.js("return window.__pollProbe.gets") == 0
+    print("PASS polling: resignation arrives automatically and finished game stops polling")
 
     b.click("#create")
     b.wait("document.querySelector('#game-status').textContent === 'Ожидание игрока'")
+    trace_requests(b)
+    b.js("window.__pollProbe.fail = true")
+    b.wait("document.querySelector('#sync-status').textContent.includes('Повтор через 4 с')")
+    count = b.js("return window.__pollProbe.gets")
+    time.sleep(2.2)
+    assert b.js("return window.__pollProbe.gets") == count
+    assert b.js("return document.querySelector('#finish').disabled")
+    b.js("window.__pollProbe.fail = false")
+    b.wait("!document.querySelector('#finish').disabled && document.querySelector('#sync-status').textContent.includes('каждые 2 секунды')")
+    assert b.js("return window.__pollProbe.posts") == 0
+    print("PASS polling: injected network error backs off, marks stale state and recovers with GET only")
     b.click("#finish")
     b.command("POST", "/alert/accept", {})
     b.wait("document.querySelector('#turn-status').textContent === 'Игра закрыта'")
