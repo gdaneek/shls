@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scripts/test-integration.sh` check of the database, cache, and broker flows; the startup check covers Event Worker.
 - API description in the README.
 - Network segments `public`, `data`, and `messaging` with a fixed IP plan; `data` and `messaging` are internal.
+- nftables bridge firewall for the internal segments with explicit ALLOW rules and a logged default DENY.
 
 ### Fixed
 
