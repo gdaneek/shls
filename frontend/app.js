@@ -14,7 +14,9 @@ const errors = {
   "the game is already finished": "Игра уже завершена.",
   "the source cell does not contain your piece": "Выберите свою шашку.",
   "the target cell is not empty": "Клетка уже занята.",
-  "a piece moves one step diagonally forward": "Разрешён один шаг по диагонали вперёд.",
+  "illegal move": "Такой ход недопустим. Выберите подсвеченную клетку.",
+  "capture is mandatory": "Взятие обязательно. Выберите шашку, которая может бить.",
+  "continue capturing with the same piece": "Нужно продолжить бой той же шашкой.",
   "storage is temporarily unavailable": "Сервер временно не может обратиться к базе. Попробуйте обновить позже.",
   "the game was changed by another request, read it again and retry": "Состояние игры изменилось. Доска обновлена — выберите ход заново.",
 };
@@ -136,12 +138,21 @@ async function request(path, method = "GET", body) {
   } finally { clearTimeout(timeout); }
 }
 
+function isCell(value) {
+  return Array.isArray(value) && value.length === 2 &&
+    value.every((coordinate) => Number.isInteger(coordinate) && coordinate >= 0 && coordinate < 8);
+}
+
 function setGame(value) {
   if (!uuid.test(value.game_id) || !Array.isArray(value.board) || value.board.length !== 8 ||
-      !value.board.every((row) => typeof row === "string" && /^[.wb]{8}$/.test(row)) ||
+      !value.board.every((row) => typeof row === "string" && /^[.wbWB]{8}$/.test(row)) ||
       !Object.hasOwn(statusName, value.status) || !Object.hasOwn(sideName, value.current_turn) ||
       !Number.isInteger(value.version) || value.version < 1 ||
-      (value.winner !== null && !Object.hasOwn(sideName, value.winner))) {
+      (value.winner !== null && !Object.hasOwn(sideName, value.winner)) ||
+      (value.capture_from !== null && !isCell(value.capture_from)) ||
+      !Array.isArray(value.captured_cells) || !value.captured_cells.every(isCell) ||
+      !Array.isArray(value.legal_moves) || !value.legal_moves.every((move) =>
+        isCell(move.from) && isCell(move.to) && (move.capture === null || isCell(move.capture)))) {
     throw new Error("Сервер вернул некорректное состояние игры.");
   }
   // Redis may briefly return an older version. Never roll back a known state.
@@ -150,8 +161,8 @@ function setGame(value) {
   const recovering = stale;
   if (game?.game_id !== value.game_id || !game.board) $("connect-id").value = value.game_id;
   game = value;
-  if (changed) selected = null;
   stale = false;
+  if (changed) selected = canMove() && game.capture_from ? [...game.capture_from] : null;
   storageWrite("mini-checkers:game", game.game_id);
   return changed || recovering;
 }
@@ -161,9 +172,9 @@ function canMove() {
 }
 
 function legalTarget(row, col) {
-  if (!selected || game.board[row][col] !== ".") return false;
-  const forward = player.side === "white" ? -1 : 1;
-  return row - selected[0] === forward && Math.abs(col - selected[1]) === 1;
+  return selected && game.legal_moves.some((move) =>
+    move.from[0] === selected[0] && move.from[1] === selected[1] &&
+    move.to[0] === row && move.to[1] === col);
 }
 
 function render() {
@@ -183,6 +194,10 @@ function render() {
   if (game?.status === "active") {
     heading = `Ходят ${sideName[game.current_turn].toLowerCase()}`;
     badge = canMove() ? "Ваш ход" : (player ? "Ход соперника" : "Просмотр");
+    if (game.capture_from) {
+      heading = "Продолжение взятия";
+      badge = canMove() ? "Продолжите бой" : "Идёт бой";
+    }
   }
   if (game?.status === "finished") {
     heading = game.winner ? `Победили ${sideName[game.winner].toLowerCase()}` : "Игра закрыта";
@@ -192,7 +207,9 @@ function render() {
   $("turn-badge").textContent = stale ? "Обновите доску" : badge;
   $("turn-badge").className = `badge${canMove() ? " your-turn" : ""}`;
   $("move-hint").textContent = stale ? "Состояние не подтверждено сервером. Нажмите «Обновить»." :
+    canMove() && game.capture_from ? "Продолжите бой выбранной шашкой. Другую шашку выбирать нельзя." :
     selected ? "Нажмите на подсвеченную клетку, чтобы сделать ход." :
+    canMove() && game.legal_moves[0]?.capture ? "Взятие обязательно. Выберите одну из бьющих шашек." :
     canMove() ? "Выберите свою шашку, затем подсвеченную клетку." :
     game?.status === "active" ? "Ожидаем ход соперника. Доска обновляется автоматически." : "Белые ходят первыми.";
 
@@ -200,21 +217,25 @@ function render() {
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
       const piece = game?.board?.[row]?.[col] || ".";
-      const own = player && piece === (player.side === "white" ? "w" : "b");
+      const selectable = canMove() && game.legal_moves.some((move) => move.from[0] === row && move.from[1] === col);
       const target = canMove() && legalTarget(row, col);
+      const captured = game?.captured_cells?.some((cell) => cell[0] === row && cell[1] === col);
+      const king = piece === "W" || piece === "B";
       const active = selected?.[0] === row && selected?.[1] === col;
       const cell = document.createElement("button");
       cell.type = "button";
-      cell.className = `cell${(row + col) % 2 ? " dark" : ""}${active ? " selected" : ""}${target ? " legal" : ""}`;
+      cell.className = `cell${(row + col) % 2 ? " dark" : ""}${active ? " selected" : ""}${target ? " legal" : ""}${captured ? " captured" : ""}`;
       cell.dataset.row = row;
       cell.dataset.col = col;
-      cell.disabled = busy || !canMove() || (!own && !target);
-      const description = piece === "w" ? "белая шашка" : piece === "b" ? "чёрная шашка" : "пусто";
+      cell.disabled = busy || !canMove() || (!selectable && !target);
+      const color = piece.toLowerCase() === "w" ? "белая" : "чёрная";
+      const description = piece === "." ? "пусто" : `${color} ${king ? "дамка" : "шашка"}${captured ? ", побита" : ""}`;
       cell.setAttribute("aria-label", `Строка ${row}, столбец ${col}: ${description}`);
       cell.setAttribute("aria-pressed", String(active));
       if (piece !== ".") {
         const disc = document.createElement("span");
-        disc.className = `piece ${piece === "w" ? "white" : "black"}`;
+        disc.className = `piece ${piece.toLowerCase() === "w" ? "white" : "black"}${king ? " king" : ""}`;
+        if (king) disc.textContent = "Д";
         disc.setAttribute("aria-hidden", "true");
         cell.append(disc);
       }
@@ -294,9 +315,10 @@ board.addEventListener("click", (event) => {
   const cell = event.target.closest("button.cell");
   if (!cell || cell.disabled || !canMove()) return;
   const row = Number(cell.dataset.row), col = Number(cell.dataset.col);
-  const own = game.board[row][col] === (player.side === "white" ? "w" : "b");
+  const own = game.board[row][col].toLowerCase() === (player.side === "white" ? "w" : "b");
   if (own) {
-    selected = selected?.[0] === row && selected?.[1] === col ? null : [row, col];
+    selected = game.capture_from ? [...game.capture_from] :
+      selected?.[0] === row && selected?.[1] === col ? null : [row, col];
     render();
     board.querySelector(`[data-row="${row}"][data-col="${col}"]`).focus();
   } else if (legalTarget(row, col)) {
@@ -308,7 +330,8 @@ board.addEventListener("click", (event) => {
         else { stale = true; selected = null; }
         throw error;
       }
-      message("Ход принят. Теперь ход соперника.", "success");
+      message(game.status === "finished" ? "Партия завершена." : game.capture_from ?
+        "Взятие принято. Нужно продолжить бой той же шашкой." : "Ход принят. Теперь ход соперника.", "success");
     });
   }
 });

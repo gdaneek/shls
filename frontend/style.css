@@ -74,6 +74,10 @@ dd { margin: 0; font-weight: 600; text-align: right; }
 .piece { width: 72%; aspect-ratio: 1; border-radius: 50%; display: block; box-shadow: 0 3px 3px #172c2940, inset 0 0 0 4px #ffffff30; pointer-events: none; }
 .piece.white { background: #fcf8e7; border: 3px solid #d3c8a9; }
 .piece.black { background: #253b32; border: 3px solid #172c25; }
+.piece.king { display: grid; place-items: center; font-weight: 800; font-size: clamp(.75rem, 2vw, 1.4rem); border-style: double; border-width: 5px; color: #245841; }
+.piece.black.king { color: #fcf8e7; }
+.cell.captured .piece { opacity: .35; }
+.cell.captured::after { content: "×"; position: absolute; color: #a6312c; font-size: 1.6rem; font-weight: 800; pointer-events: none; }
 .cell.legal::after { content: ""; width: 25%; aspect-ratio: 1; border-radius: 50%; background: #f5dfa2; box-shadow: 0 0 0 4px #f5dfa233; }
 .move-hint { font-size: .8rem; text-align: center; color: var(--muted); min-height: 2em; margin: 16px 0; }
 .rules { border-top: 1px solid var(--border); padding-top: 16px; font-size: .8rem; line-height: 1.55; color: var(--muted); }
