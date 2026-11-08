@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Russian-checkers captures and flying kings with durable continuation state, immediate promotion, and automatic victory.
 - Server-driven legal-move highlights, forced capture selection, king markers, and deferred capture removal in the web interface.
 - Standalone C++ rule checks plus API/browser coverage of captures, promotion, persistence, concurrency, and legacy cache compatibility.
+- Playing instructions for mandatory captures and kings in the README.
 
 ### Fixed
 
