@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Failure-recovery checks with measured restart times, and backup restore/retention/safety checks.
 - Reliability targets and backup operation instructions in the README.
 - SLI/SLO acceptance checks for correct reads, p95 latency, and timely event processing.
+- Documented SLI/SLO acceptance objectives and successful firewall-enabled verification.
 
 ### Fixed
 
