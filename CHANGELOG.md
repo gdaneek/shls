@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reliability targets, CLI clarification note, and backup operation instructions in the README.
 - SLI/SLO acceptance checks for correct reads, p95 latency, and timely event processing.
 - Confirmed CLI means SLI/SLO; documented acceptance objectives and successful firewall-enabled verification.
+- Browser game interface with an interactive board, tab-local player credentials, spectator mode, and manual refresh.
 
 ### Fixed
 
