@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unprivileged frontend container with a same-origin API proxy, a private backend port, and explicit frontend firewall rules.
 - Frontend HTTP and Firefox browser checks, including two-player moves and tab isolation.
 - Browser game controls and frontend startup instructions in the README.
+- Automatic game-state polling with hidden-tab pause, bounded error backoff, serialized requests, and stale-version protection.
 
 ### Fixed
 

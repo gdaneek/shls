@@ -23,6 +23,65 @@ let player = null;
 let selected = null;
 let busy = false;
 let stale = false;
+const pollInterval = 2000;
+let pollDelay = pollInterval;
+let pollTimer = null;
+let pollRequest = null;
+let pollFailed = false;
+
+function syncStatus() {
+  let text = "Автообновление включится после открытия игры.";
+  if (game?.status === "finished") text = "Игра завершена. Автообновление остановлено.";
+  else if (game && document.hidden) text = "Автообновление приостановлено в скрытой вкладке.";
+  else if (game && pollFailed) text = `Не удалось обновить игру. Повтор через ${pollDelay / 1000} с.`;
+  else if (game) text = "Автообновление: каждые 2 секунды.";
+  if ($("sync-status").textContent !== text) $("sync-status").textContent = text;
+}
+
+function stopPollTimer() {
+  clearTimeout(pollTimer);
+  pollTimer = null;
+}
+
+function schedulePoll() {
+  stopPollTimer();
+  syncStatus();
+  if (game && game.status !== "finished" && !busy && !pollRequest && !document.hidden) {
+    pollTimer = setTimeout(pollNow, pollDelay);
+  }
+}
+
+function pollNow() {
+  stopPollTimer();
+  if (!game || game.status === "finished" || busy || pollRequest || document.hidden) return;
+  const id = game.game_id;
+  pollRequest = (async () => {
+    try {
+      const value = await request(`/games/${id}`);
+      if (game?.game_id !== id) return;
+      const recovering = pollFailed;
+      const changed = setGame(value);
+      pollDelay = pollInterval;
+      pollFailed = false;
+      if (!busy && (changed || recovering)) {
+        render();
+        message(recovering ? "Связь с сервером восстановлена." : "Состояние игры обновлено.", "success");
+      }
+    } catch (error) {
+      stale = true;
+      selected = null;
+      pollFailed = true;
+      pollDelay = Math.min(pollDelay * 2, 30000);
+      if (!busy) { render(); message(error.message, "error"); }
+    }
+  })().finally(() => { pollRequest = null; schedulePoll(); });
+}
+
+document.addEventListener("visibilitychange", () => {
+  stopPollTimer();
+  syncStatus();
+  if (!document.hidden) pollNow();
+});
 
 // Credentials stay in this tab, never in URLs, HTML, logs or localStorage.
 function storageRead(key) {
@@ -70,7 +129,8 @@ async function request(path, method = "GET", body) {
     return data;
   } catch (error) {
     if (error.name === "AbortError" || error instanceof TypeError) {
-      throw new Error("Нет ответа от сервера. Запрос мог выполниться: обновите игру перед повтором действия.");
+      throw new Error(method === "GET" ? "Нет ответа от сервера. Автообновление повторит запрос." :
+        "Нет ответа от сервера. Запрос мог выполниться: обновите игру перед повтором действия.");
     }
     throw error;
   } finally { clearTimeout(timeout); }
@@ -84,11 +144,16 @@ function setGame(value) {
       (value.winner !== null && !Object.hasOwn(sideName, value.winner))) {
     throw new Error("Сервер вернул некорректное состояние игры.");
   }
+  // Redis may briefly return an older version. Never roll back a known state.
+  if (game?.game_id === value.game_id && game.version > value.version) return false;
+  const changed = game?.game_id !== value.game_id || game.version !== value.version;
+  const recovering = stale;
+  if (game?.game_id !== value.game_id || !game.board) $("connect-id").value = value.game_id;
   game = value;
-  $("connect-id").value = game.game_id;
-  selected = null;
+  if (changed) selected = null;
   stale = false;
   storageWrite("mini-checkers:game", game.game_id);
+  return changed || recovering;
 }
 
 function canMove() {
@@ -129,7 +194,7 @@ function render() {
   $("move-hint").textContent = stale ? "Состояние не подтверждено сервером. Нажмите «Обновить»." :
     selected ? "Нажмите на подсвеченную клетку, чтобы сделать ход." :
     canMove() ? "Выберите свою шашку, затем подсвеченную клетку." :
-    game?.status === "active" ? "После хода соперника нажмите «Обновить»." : "Белые ходят первыми.";
+    game?.status === "active" ? "Ожидаем ход соперника. Доска обновляется автоматически." : "Белые ходят первыми.";
 
   const cells = [];
   for (let row = 0; row < 8; row++) {
@@ -157,19 +222,28 @@ function render() {
     }
   }
   board.replaceChildren(...cells);
+  syncStatus();
 }
 
 async function run(action) {
   if (busy) return;
   busy = true;
+  stopPollTimer();
   message("Подождите…");
   render();
-  try { await action(); }
+  try {
+    // Serialize user operations with an already-running GET. Never overlap
+    // polling with a move, a join, a game switch, or a manual refresh.
+    if (pollRequest) await pollRequest;
+    await action();
+    pollDelay = pollInterval;
+    pollFailed = false;
+  }
   catch (error) {
     if (game && !game.board) stale = true;
     message(error.message, "error");
   }
-  finally { busy = false; render(); }
+  finally { busy = false; render(); schedulePoll(); }
 }
 
 async function refresh() {
@@ -207,7 +281,7 @@ $("connect-form").addEventListener("submit", (event) => {
     const value = await request(`/games/${id}`);
     player = credential;
     setGame(value);
-    message(joining ? "Вы в игре. Нажмите «Обновить» после хода соперника." : "Игра открыта.", "success");
+    message(joining ? "Вы в игре. Доска обновляется автоматически." : "Игра открыта.", "success");
   });
 });
 
