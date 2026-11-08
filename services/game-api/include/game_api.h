@@ -22,7 +22,7 @@ class GameApi {
   GameApi(drogon::orm::DbClientPtr db, drogon::nosql::RedisClientPtr redis,
           int cache_ttl_seconds);
 
-  void CreateSchema();
+  void CreateSchema(const std::string& path);
   void RegisterRoutes();
 
  private:

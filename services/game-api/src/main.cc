@@ -58,11 +58,11 @@ std::string ResolveIpv4(const std::string& host) {
   return ip;
 }
 
-void CreateSchemaWithRetry(mini_checkers::GameApi& api) {
+void CreateSchemaWithRetry(mini_checkers::GameApi& api, const std::string& path) {
   constexpr int kAttempts = 10;
   for (int attempt = 1;; ++attempt) {
     try {
-      api.CreateSchema();
+      api.CreateSchema(path);
       return;
     } catch (const drogon::orm::DrogonDbException& error) {
       if (attempt == kAttempts) throw;
@@ -111,7 +111,7 @@ int main() {
 
   mini_checkers::GameApi api(db, redis,
                              IntEnv("CACHE_TTL_SECONDS", 60));
-  CreateSchemaWithRetry(api);
+  CreateSchemaWithRetry(api, Env("POSTGRES_SCHEMA_FILE", "infrastructure/postgres/schema.sql"));
   publisher.Start();
   api.RegisterRoutes();
 

@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Server-driven legal-move highlights, forced capture selection, king markers, and deferred capture removal in the web interface.
 - Standalone C++ rule checks plus API/browser coverage of captures, promotion, persistence, concurrency, and legacy cache compatibility.
 - Playing instructions for mandatory captures and kings in the README.
+- Canonical PostgreSQL schema SQL file loaded by the API at startup and included in its Docker image.
 
 ### Fixed
 
