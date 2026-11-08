@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scripts/test-network.sh` check of allowed, firewall-denied, and segmentation-denied connections.
 - Network segments and firewall description in the README.
 - Service restart policies, API liveness/readiness, Worker heartbeat healthcheck, and PostgreSQL outbox for event delivery after recovery.
+- PostgreSQL dump/restore scripts, seven-day retention, and a daily systemd user backup timer.
 
 ### Fixed
 
