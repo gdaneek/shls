@@ -85,7 +85,7 @@ int main() {
       " dbname=" + PgQuote(Env("POSTGRES_DB", "mini_checkers")) +
       " user=" + PgQuote(Env("POSTGRES_USER", "mini_checkers")) +
       " password=" + PgQuote(RequiredEnv("POSTGRES_PASSWORD")) +
-      " connect_timeout=5";
+      " connect_timeout=5 target_session_attrs=read-write application_name=game-api";
   auto db = drogon::orm::DbClient::newPgClient(pg_connection, 2);
   db->setTimeout(5.0);
 

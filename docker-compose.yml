@@ -34,7 +34,7 @@ services:
       target: game-api
     image: mini-checkers-game-api:latest
     environment:
-      POSTGRES_HOST: postgres
+      POSTGRES_HOST: ${POSTGRES_PRIMARY_HOST:-postgres}
       POSTGRES_DB: mini_checkers
       POSTGRES_USER: mini_checkers
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
@@ -53,6 +53,8 @@ services:
         ipv4_address: 10.10.3.2
     depends_on:
       postgres:
+        condition: service_healthy
+      postgres-standby:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -107,11 +109,13 @@ services:
   postgres:
     restart: unless-stopped
     stop_grace_period: 30s
-    image: postgres:17-bookworm
-    environment:
+    build: ./infrastructure/postgres
+    image: mini-checkers-postgres:latest
+    environment: &postgres-environment
       POSTGRES_DB: mini_checkers
       POSTGRES_USER: mini_checkers
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD:?set POSTGRES_REPLICATION_PASSWORD in .env (openssl rand -hex 32)}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
@@ -122,6 +126,52 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  postgres-standby:
+    build: ./infrastructure/postgres
+    image: mini-checkers-postgres:latest
+    restart: unless-stopped
+    stop_grace_period: 30s
+    environment:
+      <<: *postgres-environment
+      PGDATA: /var/lib/postgresql/data/cluster
+      POSTGRES_STANDBY_HOST: postgres
+    volumes:
+      - postgres-standby-data:/var/lib/postgresql/data
+    networks:
+      data:
+        ipv4_address: 10.10.2.5
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "mini_checkers", "-d", "mini_checkers"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  # Explicit one-off administration job, not started by a normal compose up.
+  postgres-maintenance:
+    profiles: [tools]
+    build: ./infrastructure/postgres
+    image: mini-checkers-postgres:latest
+    entrypoint: ["/usr/local/bin/postgres-maintenance.sh"]
+    user: postgres
+    environment: *postgres-environment
+    volumes:
+      - postgres-data:/data/postgres
+      - postgres-standby-data:/data/postgres-standby
+    networks:
+      data:
+        ipv4_address: 10.10.2.6
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
 
   redis:
     restart: unless-stopped
@@ -160,6 +210,7 @@ services:
 
 volumes:
   postgres-data:
+  postgres-standby-data:
   rabbitmq-data:
 
 # Network segments. Fixed subnets, addresses and bridge names are referenced
