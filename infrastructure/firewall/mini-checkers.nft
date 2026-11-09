@@ -25,6 +25,7 @@ define POSTGRES_MAINTENANCE = 10.10.2.6
 define REDIS = 10.10.2.4
 define GAME_API_MESSAGING = 10.10.3.2
 define RABBITMQ = 10.10.3.3
+define RABBITMQ_NODES = { 10.10.3.3, 10.10.3.5, 10.10.3.6 }
 define EVENT_WORKER = 10.10.3.4
 
 table bridge mini_checkers
@@ -49,8 +50,10 @@ table bridge mini_checkers {
     meta ibrname $DATA_BRIDGE ip saddr $POSTGRES_STANDBY ip daddr $POSTGRES tcp dport 5432 ct state new counter accept comment "ALLOW postgres-standby -> peer"
     meta ibrname $DATA_BRIDGE ip saddr $POSTGRES_MAINTENANCE ip daddr { $POSTGRES, $POSTGRES_STANDBY } tcp dport 5432 ct state new counter accept comment "ALLOW maintenance -> postgres nodes"
     meta ibrname $DATA_BRIDGE ip saddr $GAME_API_DATA ip daddr $REDIS tcp dport 6379 ct state new counter accept comment "ALLOW game-api -> redis"
-    meta ibrname $MESSAGING_BRIDGE ip saddr $GAME_API_MESSAGING ip daddr $RABBITMQ tcp dport 5672 ct state new counter accept comment "ALLOW game-api -> rabbitmq"
-    meta ibrname $MESSAGING_BRIDGE ip saddr $EVENT_WORKER ip daddr $RABBITMQ tcp dport 5672 ct state new counter accept comment "ALLOW event-worker -> rabbitmq"
+    meta ibrname $MESSAGING_BRIDGE ip saddr $GAME_API_MESSAGING ip daddr $RABBITMQ_NODES tcp dport 5672 ct state new counter accept comment "ALLOW game-api -> rabbitmq nodes"
+    meta ibrname $MESSAGING_BRIDGE ip saddr $EVENT_WORKER ip daddr $RABBITMQ_NODES tcp dport 5672 ct state new counter accept comment "ALLOW event-worker -> rabbitmq nodes"
+    meta ibrname $MESSAGING_BRIDGE ip saddr $RABBITMQ_NODES ip daddr $RABBITMQ_NODES tcp dport { 4369, 25672 } ct state new counter accept comment "ALLOW RabbitMQ peer discovery and replication"
+    meta ibrname $MESSAGING_BRIDGE ip saddr $RABBITMQ_NODES ip daddr $RABBITMQ_NODES tcp dport 35672-35682 ct state new counter accept comment "ALLOW RabbitMQ node-to-CLI callbacks"
 
     # Explicit DENY: everything else inside the segments.
     limit rate 10/second burst 20 packets log prefix "mc-fw-drop: " level info

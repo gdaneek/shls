@@ -40,10 +40,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
       REDIS_HOST: redis
       CACHE_TTL_SECONDS: 60
-      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_HOST: rabbitmq,rabbitmq-2,rabbitmq-3
       RABBITMQ_USER: mini_checkers
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
-      EVENTS_QUEUE: game.events
+      EVENTS_QUEUE: game.events.quorum
     networks:
       public:
         ipv4_address: 10.10.1.2
@@ -59,6 +59,10 @@ services:
       redis:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      rabbitmq-2:
+        condition: service_healthy
+      rabbitmq-3:
         condition: service_healthy
     read_only: true
     tmpfs:
@@ -82,15 +86,19 @@ services:
       target: event-worker
     image: mini-checkers-event-worker:latest
     environment:
-      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_HOST: rabbitmq,rabbitmq-2,rabbitmq-3
       RABBITMQ_USER: mini_checkers
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
-      EVENTS_QUEUE: game.events
+      EVENTS_QUEUE: game.events.quorum
     networks:
       messaging:
         ipv4_address: 10.10.3.4
     depends_on:
       rabbitmq:
+        condition: service_healthy
+      rabbitmq-2:
+        condition: service_healthy
+      rabbitmq-3:
         condition: service_healthy
     read_only: true
     tmpfs:
@@ -190,28 +198,69 @@ services:
   rabbitmq:
     restart: unless-stopped
     stop_grace_period: 30s
-    image: rabbitmq:4.1
+    build: ./infrastructure/rabbitmq
+    image: mini-checkers-rabbitmq:latest
     # A fixed node name keeps the data in the volume usable after recreation.
     hostname: rabbitmq
-    environment:
+    environment: &rabbitmq-environment
       RABBITMQ_DEFAULT_USER: mini_checkers
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:?set RABBITMQ_ERLANG_COOKIE in .env (openssl rand -hex 32); reuse existing node cookie on upgrade}
+      # Bound Erlang scheduler threads on a developer machine.
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "+S 2:2"
+      RABBITMQ_CTL_ERL_ARGS: "+S 1:1"
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     networks:
       messaging:
         ipv4_address: 10.10.3.3
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+    healthcheck: &rabbitmq-healthcheck
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
       interval: 10s
       timeout: 10s
       start_period: 30s
       retries: 10
 
+  rabbitmq-2:
+    build: ./infrastructure/rabbitmq
+    image: mini-checkers-rabbitmq:latest
+    hostname: rabbitmq-2
+    restart: unless-stopped
+    stop_grace_period: 30s
+    environment: *rabbitmq-environment
+    volumes:
+      - rabbitmq-2-data:/var/lib/rabbitmq
+    networks:
+      messaging:
+        ipv4_address: 10.10.3.5
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck: *rabbitmq-healthcheck
+
+  rabbitmq-3:
+    build: ./infrastructure/rabbitmq
+    image: mini-checkers-rabbitmq:latest
+    hostname: rabbitmq-3
+    restart: unless-stopped
+    stop_grace_period: 30s
+    environment: *rabbitmq-environment
+    volumes:
+      - rabbitmq-3-data:/var/lib/rabbitmq
+    networks:
+      messaging:
+        ipv4_address: 10.10.3.6
+    depends_on:
+      rabbitmq-2:
+        condition: service_healthy
+    healthcheck: *rabbitmq-healthcheck
+
 volumes:
   postgres-data:
   postgres-standby-data:
   rabbitmq-data:
+  rabbitmq-2-data:
+  rabbitmq-3-data:
 
 # Network segments. Fixed subnets, addresses and bridge names are referenced
 # by the firewall rules in infrastructure/firewall/mini-checkers.nft.

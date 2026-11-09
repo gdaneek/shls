@@ -102,11 +102,11 @@ int main() {
   }
 
   mini_checkers::EventPublisher publisher({
-      .host = Env("RABBITMQ_HOST", "rabbitmq"),
+      .host = Env("RABBITMQ_HOST", "rabbitmq,rabbitmq-2,rabbitmq-3"),
       .port = IntEnv("RABBITMQ_PORT", 5672),
       .user = Env("RABBITMQ_USER", "mini_checkers"),
       .password = RequiredEnv("RABBITMQ_PASSWORD"),
-      .queue = Env("EVENTS_QUEUE", "game.events"),
+      .queue = Env("EVENTS_QUEUE", "game.events.quorum"),
   }, db, redis);
 
   mini_checkers::GameApi api(db, redis,

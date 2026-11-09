@@ -112,10 +112,11 @@ bool IsOk(const amqp_rpc_reply_t& reply) {
   return reply.reply_type == AMQP_RESPONSE_NORMAL;
 }
 
-bool Connect(amqp_connection_state_t connection, const Config& config) {
+bool Connect(amqp_connection_state_t connection, const Config& config,
+             const std::string& host) {
   amqp_socket_t* socket = amqp_tcp_socket_new(connection);
   if (socket == nullptr ||
-      amqp_socket_open_noblock(socket, config.host.c_str(), config.port,
+      amqp_socket_open_noblock(socket, host.c_str(), config.port,
                                &kNetworkTimeout) != AMQP_STATUS_OK) {
     return false;
   }
@@ -123,13 +124,21 @@ bool Connect(amqp_connection_state_t connection, const Config& config) {
   amqp_set_handshake_timeout(connection, &kNetworkTimeout);
   setsockopt(amqp_get_sockfd(connection), SOL_SOCKET, SO_SNDTIMEO,
              &kNetworkTimeout, sizeof(kNetworkTimeout));
+  amqp_table_entry_t entries[2]{};
+  entries[0].key = amqp_cstring_bytes("x-queue-type");
+  entries[0].value.kind = AMQP_FIELD_KIND_UTF8;
+  entries[0].value.value.bytes = amqp_cstring_bytes("quorum");
+  entries[1].key = amqp_cstring_bytes("x-delivery-limit");
+  entries[1].value.kind = AMQP_FIELD_KIND_I32;
+  entries[1].value.value.i32 = -1;
+  const amqp_table_t arguments{2, entries};
   return IsOk(amqp_login(connection, "/", 0, AMQP_DEFAULT_FRAME_SIZE,
                          kHeartbeatSeconds, AMQP_SASL_METHOD_PLAIN,
                          config.user.c_str(), config.password.c_str())) &&
          amqp_channel_open(connection, kChannel) != nullptr &&
          amqp_queue_declare(connection, kChannel,
                             amqp_cstring_bytes(config.queue.c_str()), 0, 1, 0,
-                            0, amqp_empty_table) != nullptr &&
+                            0, arguments) != nullptr &&
          amqp_basic_qos(connection, kChannel, 0, kPrefetchCount, 0) !=
              nullptr &&
          amqp_basic_consume(connection, kChannel,
@@ -203,11 +212,11 @@ int main(int argc, char** argv) {
   sigaction(SIGINT, &action, nullptr);
 
   const Config config{
-      .host = Env("RABBITMQ_HOST", "rabbitmq"),
+      .host = Env("RABBITMQ_HOST", "rabbitmq,rabbitmq-2,rabbitmq-3"),
       .port = std::stoi(Env("RABBITMQ_PORT", "5672")),
       .user = Env("RABBITMQ_USER", "mini_checkers"),
       .password = Env("RABBITMQ_PASSWORD", ""),
-      .queue = Env("EVENTS_QUEUE", "game.events"),
+      .queue = Env("EVENTS_QUEUE", "game.events.quorum"),
   };
   if (config.password.empty()) {
     Log("error", "environment variable RABBITMQ_PASSWORD is required");
@@ -215,12 +224,17 @@ int main(int argc, char** argv) {
   }
 
   uint64_t processed_total = 0;
+  std::size_t next_host = 0;
   while (!g_stop) {
+    const auto end = config.host.find(',', next_host);
+    const auto host = config.host.substr(next_host, end - next_host);
+    next_host = end == std::string::npos ? 0 : end + 1;
     amqp_connection_state_t connection = amqp_new_connection();
-    if (Connect(connection, config)) {
+    if (Connect(connection, config, host)) {
       MarkProgress();
       Log("info", "consuming events",
-          R"(,"queue":")" + JsonEscape(config.queue) + '"');
+          R"(,"queue":")" + JsonEscape(config.queue) + R"(","host":")" +
+              JsonEscape(host) + '"');
       Consume(connection, processed_total);
       if (g_stop) {
         amqp_channel_close(connection, kChannel, AMQP_REPLY_SUCCESS);
@@ -228,7 +242,7 @@ int main(int argc, char** argv) {
       }
     } else {
       Log("warn", "RabbitMQ is unavailable, retrying",
-          R"(,"host":")" + JsonEscape(config.host) + '"');
+          R"(,"host":")" + JsonEscape(host) + '"');
     }
     std::remove(kHeartbeatFile);
     amqp_destroy_connection(connection);

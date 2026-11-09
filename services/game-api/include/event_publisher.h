@@ -4,6 +4,7 @@
 #include <drogon/orm/DbClient.h>
 
 #include <condition_variable>
+#include <cstddef>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -19,7 +20,7 @@ namespace mini_checkers {
 class EventPublisher {
  public:
   struct Config {
-    std::string host;
+    std::string host;  // Comma-separated broker addresses, tried in rotation.
     int port = 5672;
     std::string user;
     std::string password;
@@ -56,6 +57,7 @@ class EventPublisher {
   std::condition_variable cv_;
   bool stopping_ = false;
   amqp_connection_state_t_* connection_ = nullptr;
+  std::size_t next_host_ = 0;
   std::thread thread_;
 };
 
