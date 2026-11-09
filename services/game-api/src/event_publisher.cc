@@ -90,12 +90,15 @@ void EventPublisher::Run() {
 }
 
 bool EventPublisher::Connect() {
+  const auto end = config_.host.find(',', next_host_);
+  const auto host = config_.host.substr(next_host_, end - next_host_);
+  next_host_ = end == std::string::npos ? 0 : end + 1;
   connection_ = amqp_new_connection();
   amqp_socket_t* socket = amqp_tcp_socket_new(connection_);
   if (socket == nullptr ||
-      amqp_socket_open_noblock(socket, config_.host.c_str(), config_.port,
+      amqp_socket_open_noblock(socket, host.c_str(), config_.port,
                                &kNetworkTimeout) != AMQP_STATUS_OK) {
-    LOG_WARN << "RabbitMQ is unavailable at " << config_.host << ":"
+    LOG_WARN << "RabbitMQ is unavailable at " << host << ":"
              << config_.port;
     Disconnect();
     return false;
@@ -106,6 +109,16 @@ bool EventPublisher::Connect() {
   setsockopt(amqp_get_sockfd(connection_), SOL_SOCKET, SO_SNDTIMEO,
              &kNetworkTimeout, sizeof(kNetworkTimeout));
 
+  amqp_table_entry_t entries[2]{};
+  entries[0].key = amqp_cstring_bytes("x-queue-type");
+  entries[0].value.kind = AMQP_FIELD_KIND_UTF8;
+  entries[0].value.value.bytes = amqp_cstring_bytes("quorum");
+  // Logging has no poison-message side effect; don't silently drop messages
+  // after the quorum queue's default limit of 20 interrupted deliveries.
+  entries[1].key = amqp_cstring_bytes("x-delivery-limit");
+  entries[1].value.kind = AMQP_FIELD_KIND_I32;
+  entries[1].value.value.i32 = -1;
+  const amqp_table_t arguments{2, entries};
   const bool ok =
       IsOk(amqp_login(connection_, "/", 0, AMQP_DEFAULT_FRAME_SIZE, 0,
                       AMQP_SASL_METHOD_PLAIN, config_.user.c_str(),
@@ -113,14 +126,14 @@ bool EventPublisher::Connect() {
       amqp_channel_open(connection_, kChannel) != nullptr &&
       amqp_queue_declare(connection_, kChannel,
                          amqp_cstring_bytes(config_.queue.c_str()), 0, 1, 0, 0,
-                         amqp_empty_table) != nullptr &&
+                         arguments) != nullptr &&
       amqp_confirm_select(connection_, kChannel) != nullptr;
   if (!ok) {
     LOG_WARN << "RabbitMQ login or queue setup failed";
     Disconnect();
     return false;
   }
-  LOG_INFO << "connected to RabbitMQ, queue=" << config_.queue;
+  LOG_INFO << "connected to RabbitMQ host=" << host << ", queue=" << config_.queue;
   return true;
 }
 
