@@ -2,11 +2,12 @@
 # Real restore into a NEW temporary database, compare records, then remove it.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+primary="$(scripts/postgres-primary.sh)"
 database=""
 policy_directory=""
 cleanup() {
   if [[ -n "$database" ]]; then
-    docker compose exec -T postgres dropdb -U mini_checkers -- "$database"
+    docker compose exec -T "$primary" dropdb -U mini_checkers -- "$database"
   fi
   if [[ -n "$policy_directory" ]]; then
     rm -f "$policy_directory"/mini-checkers-* "$policy_directory/.backup.lock"
@@ -14,7 +15,7 @@ cleanup() {
   fi
 }
 trap cleanup EXIT
-sql() { docker compose exec -T postgres psql -X -v ON_ERROR_STOP=1 -U mini_checkers -d "$1" -tAc "$2"; }
+sql() { docker compose exec -T "$primary" psql -X -v ON_ERROR_STOP=1 -U mini_checkers -d "$1" -tAc "$2"; }
 
 # Stable fixture. Other games may change while pg_dump takes its snapshot.
 created="$(docker compose exec -T game-api curl -fsS -X POST http://127.0.0.1:8000/games)"

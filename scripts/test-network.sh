@@ -20,6 +20,7 @@ GAME_API_PUBLIC=10.10.1.2
 FRONTEND=10.10.1.3
 GAME_API_DATA=10.10.2.2
 POSTGRES=10.10.2.3
+POSTGRES_STANDBY=10.10.2.5
 REDIS=10.10.2.4
 GAME_API_MESSAGING=10.10.3.2
 RABBITMQ=10.10.3.3
@@ -75,6 +76,9 @@ drops_before="$(drop_counter)"
 echo "--- explicit ALLOW (same segment, listed in the firewall)"
 expect frontend "$GAME_API_PUBLIC" 8000 OPEN OPEN "front>api"
 expect game-api "$POSTGRES" 5432 OPEN OPEN "game-api>pg"
+expect game-api "$POSTGRES_STANDBY" 5432 OPEN OPEN "game-api>pg2"
+expect postgres "$POSTGRES_STANDBY" 5432 OPEN OPEN "pg>peer"
+expect postgres-standby "$POSTGRES" 5432 OPEN OPEN "pg2>peer"
 expect game-api "$REDIS" 6379 OPEN OPEN "game-api>redis"
 expect game-api "$RABBITMQ" 5672 OPEN OPEN "game-api>mq"
 expect event-worker "$RABBITMQ" 5672 OPEN OPEN "worker>mq"
@@ -86,16 +90,19 @@ expect rabbitmq "$GAME_API_MESSAGING" 8000 FILTERED OPEN "mq>api"
 expect redis "$POSTGRES" 5432 FILTERED OPEN "redis>pg"
 expect postgres "$REDIS" 6379 FILTERED OPEN "pg>redis"
 expect postgres "$GAME_API_DATA" 8000 FILTERED OPEN "pg>api"
+expect postgres-standby "$REDIS" 6379 FILTERED OPEN "pg2>redis"
+expect postgres-standby "$GAME_API_DATA" 8000 FILTERED OPEN "pg2>api"
 
 echo "--- segmentation (different segments, no route)"
 expect event-worker "$POSTGRES" 5432 UNREACHABLE UNREACHABLE "worker>pg"
+expect event-worker "$POSTGRES_STANDBY" 5432 UNREACHABLE UNREACHABLE "worker>pg2"
 expect event-worker "$REDIS" 6379 UNREACHABLE UNREACHABLE "worker>redis"
 expect rabbitmq "$POSTGRES" 5432 UNREACHABLE UNREACHABLE "mq>pg"
 expect redis "$RABBITMQ" 5672 UNREACHABLE UNREACHABLE "redis>mq"
 expect postgres "$GAME_API_PUBLIC" 8000 UNREACHABLE UNREACHABLE "pg>api-public"
 
 echo "--- perimeter (host)"
-for service in game-api postgres redis rabbitmq event-worker; do
+for service in game-api postgres postgres-standby redis rabbitmq event-worker; do
   if [[ -z "$(docker port "$(docker compose ps -q "$service")")" ]]; then
     echo "PASS  $service has no ports published on the host"
   else
