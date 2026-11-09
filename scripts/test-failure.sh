@@ -9,7 +9,10 @@ failures=0
 restart_services=()
 cleanup() {
   if ((${#restart_services[@]})); then
-    docker compose start "${restart_services[@]}" >/dev/null 2>&1 || true
+    # Start existing containers only; Compose may wait on an unhealthy peer
+    # dependency while a stopped cluster needs those same peers to recover.
+    mapfile -t ids < <(docker compose ps -aq "${restart_services[@]}")
+    ((${#ids[@]})) && docker start "${ids[@]}" >/dev/null 2>&1 || true
   fi
 }
 trap cleanup EXIT
@@ -44,7 +47,7 @@ cache_recovered() {
   api -D - "http://127.0.0.1:8000/games/$game" | grep -qi 'x-cache: HIT'
 }
 
-healthy game-api && healthy event-worker && healthy postgres && healthy postgres-standby && healthy redis && healthy rabbitmq
+healthy game-api && healthy event-worker && healthy postgres && healthy postgres-standby && healthy redis && healthy rabbitmq && healthy rabbitmq-2 && healthy rabbitmq-3
 created="$(api -f -X POST http://127.0.0.1:8000/games)"
 game="$(jq -er '.game_id' <<<"$created")"
 token="$(jq -er '.player_token' <<<"$created")"
@@ -116,15 +119,27 @@ ready() { [[ "$(request_status health/ready)" == 200 ]]; }
 check wait_for 30 ready
 check test "$(sql "SELECT status FROM games WHERE id = '$game'")" = finished
 
-echo '--- Broker outage + API process exit: committed outbox survives'
-restart_services+=(rabbitmq)
-docker compose stop rabbitmq >/dev/null
+echo '--- Loss of broker majority: one live replica must not confirm new events'
+restart_services+=(rabbitmq-2 rabbitmq-3)
+docker compose stop rabbitmq-2 rabbitmq-3 >/dev/null
+minority_pending="$(api -f -X POST http://127.0.0.1:8000/games | jq -er .game_id)"
+sleep 7  # Exceeds publisher-confirm timeout; an unsafe confirm would delete the row.
+check test "$(sql "SELECT count(*) FROM outbox_events WHERE game_id = '$minority_pending'")" = 1
+check test "$(request_status health/ready)" = 200
+docker start "$(id rabbitmq-2)" "$(id rabbitmq-3)" >/dev/null
+check wait_for 60 processed "$minority_pending"
+check wait_for 15 outbox_empty "$minority_pending"
+check wait_for 30 healthy event-worker
+
+echo '--- Entire broker cluster outage + API process exit: committed outbox survives'
+restart_services+=(rabbitmq rabbitmq-2 rabbitmq-3)
+docker compose stop rabbitmq rabbitmq-2 rabbitmq-3 >/dev/null
 pending="$(api -f -X POST http://127.0.0.1:8000/games | jq -er .game_id)"
 check test "$(sql "SELECT count(*) FROM outbox_events WHERE game_id = '$pending'")" = 1
 check test "$(request_status health/ready)" = 200
 restart_test game-api 30
 check test "$(sql "SELECT count(*) FROM outbox_events WHERE game_id = '$pending'")" = 1
-docker compose start rabbitmq >/dev/null
+docker start "$(id rabbitmq)" "$(id rabbitmq-2)" "$(id rabbitmq-3)" >/dev/null
 check wait_for 60 processed "$pending"
 check wait_for 15 outbox_empty "$pending"
 check wait_for 30 healthy event-worker

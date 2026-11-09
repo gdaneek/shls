@@ -80,8 +80,19 @@ expect game-api "$POSTGRES_STANDBY" 5432 OPEN OPEN "game-api>pg2"
 expect postgres "$POSTGRES_STANDBY" 5432 OPEN OPEN "pg>peer"
 expect postgres-standby "$POSTGRES" 5432 OPEN OPEN "pg2>peer"
 expect game-api "$REDIS" 6379 OPEN OPEN "game-api>redis"
-expect game-api "$RABBITMQ" 5672 OPEN OPEN "game-api>mq"
-expect event-worker "$RABBITMQ" 5672 OPEN OPEN "worker>mq"
+for mq in 10.10.3.3 10.10.3.5 10.10.3.6; do
+  expect game-api "$mq" 5672 OPEN OPEN "api>mq"
+  expect event-worker "$mq" 5672 OPEN OPEN "worker>mq"
+done
+for source in rabbitmq rabbitmq-2 rabbitmq-3; do
+  for target in 10.10.3.3 10.10.3.5 10.10.3.6; do
+    case "$source:$target" in
+      rabbitmq:10.10.3.3|rabbitmq-2:10.10.3.5|rabbitmq-3:10.10.3.6) continue ;;
+    esac
+    expect "$source" "$target" 4369 OPEN OPEN "mq>epmd"
+    expect "$source" "$target" 25672 OPEN OPEN "mq>replica"
+  done
+done
 
 echo "--- explicit DENY (same segment, dropped by the firewall)"
 expect game-api "$FRONTEND" 8080 FILTERED OPEN "api>front"
@@ -92,17 +103,27 @@ expect postgres "$REDIS" 6379 FILTERED OPEN "pg>redis"
 expect postgres "$GAME_API_DATA" 8000 FILTERED OPEN "pg>api"
 expect postgres-standby "$REDIS" 6379 FILTERED OPEN "pg2>redis"
 expect postgres-standby "$GAME_API_DATA" 8000 FILTERED OPEN "pg2>api"
+for mq in 10.10.3.3 10.10.3.5 10.10.3.6; do
+  expect game-api "$mq" 4369 FILTERED OPEN "api>epmd"
+  expect game-api "$mq" 25672 FILTERED OPEN "api>replica"
+  expect event-worker "$mq" 4369 FILTERED OPEN "worker>epmd"
+  expect event-worker "$mq" 25672 FILTERED OPEN "worker>replica"
+done
+expect rabbitmq-2 "$GAME_API_MESSAGING" 8000 FILTERED OPEN "mq2>api"
+expect rabbitmq-3 "$GAME_API_MESSAGING" 8000 FILTERED OPEN "mq3>api"
 
 echo "--- segmentation (different segments, no route)"
 expect event-worker "$POSTGRES" 5432 UNREACHABLE UNREACHABLE "worker>pg"
 expect event-worker "$POSTGRES_STANDBY" 5432 UNREACHABLE UNREACHABLE "worker>pg2"
 expect event-worker "$REDIS" 6379 UNREACHABLE UNREACHABLE "worker>redis"
 expect rabbitmq "$POSTGRES" 5432 UNREACHABLE UNREACHABLE "mq>pg"
+expect rabbitmq-2 "$POSTGRES" 5432 UNREACHABLE UNREACHABLE "mq2>pg"
+expect rabbitmq-3 "$REDIS" 6379 UNREACHABLE UNREACHABLE "mq3>redis"
 expect redis "$RABBITMQ" 5672 UNREACHABLE UNREACHABLE "redis>mq"
 expect postgres "$GAME_API_PUBLIC" 8000 UNREACHABLE UNREACHABLE "pg>api-public"
 
 echo "--- perimeter (host)"
-for service in game-api postgres postgres-standby redis rabbitmq event-worker; do
+for service in game-api postgres postgres-standby redis rabbitmq rabbitmq-2 rabbitmq-3 event-worker; do
   if [[ -z "$(docker port "$(docker compose ps -q "$service")")" ]]; then
     echo "PASS  $service has no ports published on the host"
   else

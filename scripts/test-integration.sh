@@ -48,8 +48,8 @@ sql() {
 redis() { docker compose exec -T redis redis-cli "$@"; }
 
 queue_depth() {
-  docker compose exec -T rabbitmq rabbitmqctl -q list_queues name messages |
-    awk '$1 == "game.events" {print $2}'
+  docker compose exec -T rabbitmq rabbitmqctl -q list_queues --online --timeout 5 name messages --formatter json |
+    jq -er '.[] | select(.name == "game.events.quorum") | .messages'
 }
 
 worker_events() {
@@ -75,6 +75,7 @@ settle_events() {
   wait_until 15 outbox_empty || fail "outbox drained for $game_id"
 }
 one_queued_event() { [[ "$(queue_depth)" == 1 ]]; }
+queue_empty() { [[ "$(queue_depth)" == 0 ]]; }
 
 echo "--- write: create and join"
 request POST /games
@@ -186,7 +187,11 @@ if wait_until 30 has_event "$queued_game" game.created; then
 else
   fail "restarted event-worker processed the queued event"
 fi
-expect_eq "queue is empty after processing" 0 "$(queue_depth)"
+if wait_until 15 queue_empty; then
+  pass "queue is empty after processing"
+else
+  fail "queue is empty after processing (depth $(queue_depth))"
+fi
 
 echo "--- cache outage: reads fall back to PostgreSQL"
 docker compose stop redis >/dev/null 2>&1
