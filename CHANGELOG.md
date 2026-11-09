@@ -62,3 +62,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Drogon PostgreSQL/Redis support check that always failed because the flags are set in Drogon's directory scope.
+- README focused on installation, playing, and basic operation instead of internal network and failover details.
