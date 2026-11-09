@@ -40,7 +40,7 @@ while true; do
 done
 docker compose stop event-worker >/dev/null
 echo 'Old game.events queue drained and retained; pending PostgreSQL outbox rows will use the new quorum queue.'
-infrastructure/firewall/firewall.sh apply
+infra/firewall/firewall.sh apply
 docker compose up --build -d --wait --wait-timeout 240
 complete=true
 echo 'Upgrade complete. Verify with scripts/test-rabbitmq-failover.sh.'

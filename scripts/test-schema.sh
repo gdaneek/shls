@@ -19,7 +19,7 @@ sql() {
 apply_schema() {
   docker compose exec -T -e 'PGOPTIONS=-c client_min_messages=warning' "$primary" \
     psql -X -v ON_ERROR_STOP=1 -U mini_checkers -d "$database" \
-    < infrastructure/postgres/schema.sql >/dev/null
+    < infra/postgres/schema.sql >/dev/null
 }
 check_rows() {
   [[ "$(sql 'SELECT (SELECT count(*) FROM games), (SELECT count(*) FROM game_players),
@@ -60,6 +60,6 @@ check_rows
 [[ "$(sql 'SELECT COALESCE(capture_from, -1), captured_cells, promoted FROM games CROSS JOIN moves')" == '-1|[]|f' ]]
 echo 'PASS legacy tables gain capture columns without losing games, players, moves or events'
 
-cmp -s infrastructure/postgres/schema.sql \
+cmp -s infra/postgres/schema.sql \
   <(docker compose exec -T game-api sh -c 'cat "$POSTGRES_SCHEMA_FILE"')
 echo 'PASS the running API image contains the same SQL file'

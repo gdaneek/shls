@@ -117,7 +117,7 @@ services:
   postgres:
     restart: unless-stopped
     stop_grace_period: 30s
-    build: ./infrastructure/postgres
+    build: ./infra/postgres
     image: mini-checkers-postgres:latest
     environment: &postgres-environment
       POSTGRES_DB: mini_checkers
@@ -136,7 +136,7 @@ services:
       retries: 5
 
   postgres-standby:
-    build: ./infrastructure/postgres
+    build: ./infra/postgres
     image: mini-checkers-postgres:latest
     restart: unless-stopped
     stop_grace_period: 30s
@@ -162,7 +162,7 @@ services:
   # Explicit one-off administration job, not started by a normal compose up.
   postgres-maintenance:
     profiles: [tools]
-    build: ./infrastructure/postgres
+    build: ./infra/postgres
     image: mini-checkers-postgres:latest
     entrypoint: ["/usr/local/bin/postgres-maintenance.sh"]
     user: postgres
@@ -198,7 +198,7 @@ services:
   rabbitmq:
     restart: unless-stopped
     stop_grace_period: 30s
-    build: ./infrastructure/rabbitmq
+    build: ./infra/rabbitmq
     image: mini-checkers-rabbitmq:latest
     # A fixed node name keeps the data in the volume usable after recreation.
     hostname: rabbitmq
@@ -222,7 +222,7 @@ services:
       retries: 10
 
   rabbitmq-2:
-    build: ./infrastructure/rabbitmq
+    build: ./infra/rabbitmq
     image: mini-checkers-rabbitmq:latest
     hostname: rabbitmq-2
     restart: unless-stopped
@@ -239,7 +239,7 @@ services:
     healthcheck: *rabbitmq-healthcheck
 
   rabbitmq-3:
-    build: ./infrastructure/rabbitmq
+    build: ./infra/rabbitmq
     image: mini-checkers-rabbitmq:latest
     hostname: rabbitmq-3
     restart: unless-stopped
@@ -263,7 +263,7 @@ volumes:
   rabbitmq-3-data:
 
 # Network segments. Fixed subnets, addresses and bridge names are referenced
-# by the firewall rules in infrastructure/firewall/mini-checkers.nft.
+# by the firewall rules in infra/firewall/mini-checkers.nft.
 # data and messaging are internal: no gateway, no route to other segments.
 networks:
   public:

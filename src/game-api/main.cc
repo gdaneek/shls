@@ -11,8 +11,8 @@
 #include <string>
 #include <thread>
 
-#include "event_publisher.h"
-#include "game_api.h"
+#include "shls/event_publisher.h"
+#include "shls/game_api.h"
 
 namespace {
 
@@ -111,7 +111,7 @@ int main() {
 
   mini_checkers::GameApi api(db, redis,
                              IntEnv("CACHE_TTL_SECONDS", 60));
-  CreateSchemaWithRetry(api, Env("POSTGRES_SCHEMA_FILE", "infrastructure/postgres/schema.sql"));
+  CreateSchemaWithRetry(api, Env("POSTGRES_SCHEMA_FILE", "infra/postgres/schema.sql"));
   publisher.Start();
   api.RegisterRoutes();
 

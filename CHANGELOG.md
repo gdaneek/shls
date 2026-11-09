@@ -59,6 +59,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Broker leader-crash, consumer reconnection, quorum-loss, and cluster-aware regression checks.
 - RabbitMQ cluster setup and failover demonstration commands in the README.
 
+### Changed
+
+- Consolidated project headers in `shls/`, implementation sources in `src/`, tests in `tests/`, and infrastructure in `infra/`.
+
 ### Fixed
 
 - Drogon PostgreSQL/Redis support check that always failed because the flags are set in Drogon's directory scope.

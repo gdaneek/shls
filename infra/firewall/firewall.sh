@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Usage: infrastructure/firewall/firewall.sh apply|rollback|status
+# Usage: infra/firewall/firewall.sh apply|rollback|status
 #   apply    load mini-checkers.nft (replaces the table atomically)
 #   rollback delete the table; traffic inside the segments is no longer filtered
 #   status   print the rules with packet counters

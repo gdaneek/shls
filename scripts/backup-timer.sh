@@ -19,9 +19,9 @@ case "${1:-}" in
     root="${root//\"/\\\"}"
     root="${root//%/%%}"
     root="${root//\$/\$\$}"
-    template="$(cat infrastructure/backups/$unit.service.in)"
+    template="$(cat infra/backups/$unit.service.in)"
     printf '%s\n' "${template//@ROOT@/$root}" >"$directory/$unit.service"
-    cp "infrastructure/backups/$unit.timer" "$directory/$unit.timer"
+    cp "infra/backups/$unit.timer" "$directory/$unit.timer"
     systemctl --user daemon-reload
     systemctl --user enable --now "$unit.timer"
     ;;
