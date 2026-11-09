@@ -4,6 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 umask 077
+primary="$(scripts/postgres-primary.sh)"
 
 directory="${BACKUP_DIR:-$PWD/backups}"
 days="${BACKUP_RETENTION_DAYS:-7}"
@@ -16,11 +17,11 @@ flock -w 60 9
 
 partial="$(mktemp "$directory/mini-checkers-$(date -u +%Y%m%dT%H%M%SZ)-XXXXXX.dump.partial")"
 trap 'rm -f "$partial"' EXIT
-timeout 240 docker compose exec -T postgres sh -c \
+timeout 240 docker compose exec -T "$primary" sh -c \
   'exec pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc --no-owner --no-acl' >"$partial"
 [[ -s "$partial" ]]
 # Validate archive structure before publishing it as a successful backup.
-docker compose exec -T postgres pg_restore --list <"$partial" >/dev/null
+docker compose exec -T "$primary" pg_restore --list <"$partial" >/dev/null
 archive="${partial%.partial}"
 mv "$partial" "$archive"
 # Rotate only our completed archives, and only after a successful new backup.
