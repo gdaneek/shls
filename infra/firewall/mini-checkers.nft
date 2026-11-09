@@ -8,7 +8,7 @@
 # Traffic between segments has no route at all (internal networks), so it
 # never reaches this table.
 #
-# Apply: infrastructure/firewall/firewall.sh apply
+# Apply: infra/firewall/firewall.sh apply
 # The file replaces the whole table atomically, so it can be re-applied.
 
 define PUBLIC_BRIDGE = "mc-public"

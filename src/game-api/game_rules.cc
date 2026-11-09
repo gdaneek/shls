@@ -1,4 +1,4 @@
-#include "game_rules.h"
+#include "shls/game_rules.h"
 
 #include <algorithm>
 #include <array>

@@ -10,7 +10,7 @@
 #include <optional>
 #include <string>
 
-#include "game_rules.h"
+#include "shls/game_rules.h"
 
 namespace mini_checkers {
 

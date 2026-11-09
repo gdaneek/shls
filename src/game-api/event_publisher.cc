@@ -1,4 +1,4 @@
-#include "event_publisher.h"
+#include "shls/event_publisher.h"
 
 #include <rabbitmq-c/amqp.h>
 #include <rabbitmq-c/tcp_socket.h>

@@ -11,16 +11,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /src
 COPY CMakeLists.txt ./
 COPY third-party ./third-party
-COPY services ./services
+COPY shls ./shls
+COPY src ./src
+COPY tests/game-api/game_rules_test.cc ./tests/game-api/game_rules_test.cc
 
 # The cache mount keeps downloaded dependencies and object files between
 # builds, so a code change does not re-clone and rebuild Drogon.
 RUN --mount=type=cache,target=/build,sharing=locked \
     cmake -S . -B /build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
     && cmake --build /build --target game-api event-worker game-rules-test --parallel "$(nproc)" \
-    && /build/services/game-api/game-rules-test \
+    && /build/game-rules-test \
     && mkdir -p /out \
-    && cp /build/services/game-api/game-api /build/services/event-worker/event-worker /out/
+    && cp /build/game-api /build/event-worker /out/
 
 FROM debian:bookworm-slim AS runtime
 
@@ -32,7 +34,7 @@ USER 10001:10001
 
 FROM runtime AS game-api
 COPY --from=build /out/game-api /usr/local/bin/game-api
-COPY infrastructure/postgres/schema.sql /usr/local/share/mini-checkers/schema.sql
+COPY infra/postgres/schema.sql /usr/local/share/mini-checkers/schema.sql
 ENV POSTGRES_SCHEMA_FILE=/usr/local/share/mini-checkers/schema.sql
 EXPOSE 8000
 ENTRYPOINT ["/usr/local/bin/game-api"]

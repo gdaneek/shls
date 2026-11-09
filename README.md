@@ -29,7 +29,7 @@ Mini Checkers — веб-приложение для игры в шашки вд
 3. Соберите и запустите приложение:
 
    ```bash
-   infrastructure/firewall/firewall.sh apply
+   infra/firewall/firewall.sh apply
    docker compose up --build -d --wait --wait-timeout 240
    ```
 
