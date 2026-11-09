@@ -51,7 +51,7 @@ redis_ping() {
   [[ "$(docker compose exec -T redis redis-cli ping)" == "PONG" ]]
 }
 
-for service in frontend game-api event-worker postgres postgres-standby redis rabbitmq; do
+for service in frontend game-api event-worker postgres postgres-standby redis rabbitmq rabbitmq-2 rabbitmq-3; do
   check "$service container is healthy" is_healthy "$service"
 done
 
@@ -65,8 +65,14 @@ check "exactly one PostgreSQL node is writable" scripts/postgres-primary.sh
 check "redis answers PONG" redis_ping
 check "rabbitmq AMQP listener accepts connections" \
   docker compose exec -T rabbitmq rabbitmq-diagnostics -q check_port_connectivity
+quorum_queue() {
+  docker compose exec -T rabbitmq rabbitmqctl -q list_queues --online --timeout 5 \
+    name type members online --formatter json |
+    jq -e '.[] | select(.name == "game.events.quorum") | .type == "quorum" and (.members | length) == 3 and (.online | length) == 3'
+}
+check "game events have three online quorum replicas" quorum_queue
 
-for service in game-api postgres postgres-standby redis rabbitmq event-worker; do
+for service in game-api postgres postgres-standby redis rabbitmq rabbitmq-2 rabbitmq-3 event-worker; do
   check "$service has no ports published on the host" not_published "$service"
 done
 
