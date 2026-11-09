@@ -9,10 +9,14 @@ Mini Checkers — учебный проект по курсу «Безопасн
 Нужны Docker Engine и Docker Compose v2. Из корня репозитория:
 
 В `.env` задайте пароли; для `POSTGRES_REPLICATION_PASSWORD` используйте вывод
-`openssl rand -hex 32` (64 hex-символа). На существующем проекте тома не удаляйте.
+`openssl rand -hex 32` (64 hex-символа). Для нового RabbitMQ-кластера задайте
+отдельный `RABBITMQ_ERLANG_COOKIE` такой же командой. На существующем проекте
+тома не удаляйте; переход с одного RabbitMQ выполняйте через `scripts/upgrade-rabbitmq.sh`:
+он сохранит прежний cookie и дождётся обработки старой очереди.
 
 ```bash
 cp .env.example .env    # если .env ещё нет; задайте свои пароли
+chmod 600 .env
 infrastructure/firewall/firewall.sh apply    # Linux, нужен sudo для nft
 docker compose up --build --wait --wait-timeout 180
 curl http://127.0.0.1:8000/api/hello    # {"message":"hello-world"}
@@ -44,9 +48,9 @@ bash scripts/test-network.sh        # сегментация и firewall
 |---|---|---|---|
 | `public` | `10.10.1.0/24` | `mc-public` | game-api `.2`, frontend `.3` (сайт опубликован на `127.0.0.1:8000`) |
 | `data` (internal) | `10.10.2.0/24` | `mc-data` | game-api `.2`, postgres `.3`, redis `.4`, postgres-standby `.5` |
-| `messaging` (internal) | `10.10.3.0/24` | `mc-msg` | game-api `.2`, rabbitmq `.3`, event-worker `.4` |
+| `messaging` (internal) | `10.10.3.0/24` | `mc-msg` | game-api `.2`, rabbitmq `.3`, event-worker `.4`, rabbitmq-2 `.5`, rabbitmq-3 `.6` |
 
-Между внутренними сегментами маршрута нет. Трафик между контейнерами фильтрует таблица nftables `bridge mini_checkers` ([`infrastructure/firewall/mini-checkers.nft`](infrastructure/firewall/mini-checkers.nft)): разрешены frontend → game-api:8000, game-api → оба узла PostgreSQL:5432, game-api → redis:6379, game-api → rabbitmq:5672 и event-worker → rabbitmq:5672. Узлы PostgreSQL общаются друг с другом по 5432; служебный job профиля `tools` (`.6`) имеет доступ только к ним. Остальное логируется (`mc-fw-drop:`) и отбрасывается. Управление: `infrastructure/firewall/firewall.sh apply|rollback|status`. Правила не сохраняются после перезагрузки хоста — их нужно применить заново, лучше до `docker compose up`.
+Между внутренними сегментами маршрута нет. Трафик между контейнерами фильтрует таблица nftables `bridge mini_checkers` ([`infrastructure/firewall/mini-checkers.nft`](infrastructure/firewall/mini-checkers.nft)): разрешены frontend → game-api:8000, game-api → оба узла PostgreSQL:5432, game-api → redis:6379, game-api/event-worker → все узлы RabbitMQ:5672. Узлы PostgreSQL общаются друг с другом по 5432; служебный job профиля `tools` (`.6` в `data`) имеет доступ только к ним. Между узлами RabbitMQ разрешены 4369/25672 (кластер) и 35672–35682 (служебные CLI-соединения). Остальное логируется (`mc-fw-drop:`) и отбрасывается. Управление: `infrastructure/firewall/firewall.sh apply|rollback|status`. Правила не сохраняются после перезагрузки хоста — их нужно применить заново, лучше до `docker compose up`.
 
 ## API
 
@@ -60,7 +64,7 @@ bash scripts/test-network.sh        # сегментация и firewall
 | `POST /games/{id}/moves` | Ход `{"from": [5, 0], "to": [4, 1]}` (строка, столбец) |
 | `POST /games/{id}/finish` | Завершить игру (сдаться); побеждает соперник |
 
-Ходы и завершение требуют заголовок `X-Player-Token`. Правила упрощены: шашка ходит на одну клетку по диагонали вперёд, белые начинают. После каждого изменения Game API сбрасывает кэш Redis и публикует событие (`game.created`, `player.joined`, `move.made`, `game.finished`) в очередь RabbitMQ `game.events`, которую читает Event Worker:
+Ходы и завершение требуют заголовок `X-Player-Token`. Правила упрощены: шашка ходит на одну клетку по диагонали вперёд, белые начинают. После каждого изменения Game API сбрасывает кэш Redis и публикует событие (`game.created`, `player.joined`, `move.made`, `game.finished`) в очередь RabbitMQ `game.events.quorum`, которую читает Event Worker:
 
 ```bash
 docker compose logs -f event-worker
@@ -94,3 +98,17 @@ scripts/test-postgres-failover.sh   # демо: аварийно заверша�
 Репликация асинхронная: последние ещё не переданные транзакции при аварии
 могут потеряться; демо запускайте без параллельных записей. Общий хост остаётся
 единой точкой отказа.
+
+## Переключение RabbitMQ
+
+Три узла хранят реплики quorum-очереди. При отказе одного новый лидер
+выбирается автоматически; API и worker переподключаются без перезапуска.
+
+```bash
+scripts/test-rabbitmq-failover.sh   # демо: SIGKILL лидера и узла подключения worker; затем их возврат
+docker compose exec rabbitmq rabbitmq-queues quorum_status --vhost / game.events.quorum
+```
+
+Демо запускайте без параллельных записей. Нужны хотя бы два живых узла из трёх;
+при потере большинства события ждут в PostgreSQL outbox. Повторная доставка
+возможна. Все узлы на одном хосте — от потери всей машины это не защищает.
