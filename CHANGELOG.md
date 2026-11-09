@@ -57,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Three-node RabbitMQ quorum replication, separate persistent storage, and automatic publisher/consumer reconnection.
 - Guarded single-node RabbitMQ upgrade that preserves the existing cookie, queue, and volume.
 - Broker leader-crash, consumer reconnection, quorum-loss, and cluster-aware regression checks.
+- RabbitMQ cluster setup and failover demonstration commands in the README.
 
 ### Fixed
 
