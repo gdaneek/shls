@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Native PostgreSQL streaming standby with separate storage, replication credentials, and explicit database network rules.
 - Guarded PostgreSQL promotion and rewind/rejoin, API redirection, scoped cache invalidation, and role-aware backups/restores.
 - PostgreSQL crash-failover tests and role-aware schema, network, recovery, game, and browser regression checks.
+- PostgreSQL replication setup and explicit failover operation commands in the README.
 
 ### Fixed
 
