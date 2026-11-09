@@ -235,7 +235,8 @@ services:
         ipv4_address: 10.10.3.5
     depends_on:
       rabbitmq:
-        condition: service_healthy
+        # Existing cluster metadata may need peers before any node is healthy.
+        condition: service_started
     healthcheck: *rabbitmq-healthcheck
 
   rabbitmq-3:
@@ -252,7 +253,7 @@ services:
         ipv4_address: 10.10.3.6
     depends_on:
       rabbitmq-2:
-        condition: service_healthy
+        condition: service_started
     healthcheck: *rabbitmq-healthcheck
 
 volumes:
