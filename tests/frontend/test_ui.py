@@ -197,7 +197,8 @@ def seed_position(game, pieces, turn="white"):
     for row, col, piece in pieces:
         assert (row + col) % 2 and piece in "wbWB"
         board[row * 8 + col] = piece
-    subprocess.run(["docker", "compose", "exec", "-T", "postgres", "psql", "-X",
+    primary = subprocess.check_output([str(ROOT / "scripts/postgres-primary.sh")], cwd=ROOT).decode().strip()
+    subprocess.run(["docker", "compose", "exec", "-T", primary, "psql", "-X",
                     "-v", "ON_ERROR_STOP=1", "-U", "mini_checkers", "-d", "mini_checkers",
                     "-c", f"UPDATE games SET board = '{''.join(board)}', current_turn = '{turn}', "
                     f"version = version + 1 WHERE id = '{game}'"],

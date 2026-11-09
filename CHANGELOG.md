@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Firewall fault demonstration that blocks required API-to-PostgreSQL traffic and verifies errors, rollback, and recovery.
 - Native PostgreSQL streaming standby with separate storage, replication credentials, and explicit database network rules.
 - Guarded PostgreSQL promotion and rewind/rejoin, API redirection, scoped cache invalidation, and role-aware backups/restores.
+- PostgreSQL crash-failover tests and role-aware schema, network, recovery, game, and browser regression checks.
 
 ### Fixed
 

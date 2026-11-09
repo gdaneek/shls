@@ -7,6 +7,7 @@
 set -uo pipefail
 
 cd "$(dirname "$0")/.."
+primary="$(scripts/postgres-primary.sh)"
 
 failures=0
 tmp_dir="$(mktemp -d)"
@@ -40,7 +41,7 @@ request() {
 }
 
 sql() {
-  docker compose exec -T postgres \
+  docker compose exec -T "$primary" \
     psql -U mini_checkers -d mini_checkers -tAc "$1"
 }
 

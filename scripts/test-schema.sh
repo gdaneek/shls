@@ -2,21 +2,22 @@
 # Verify the canonical SQL file in a NEW temporary database, never the live DB.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+primary="$(scripts/postgres-primary.sh)"
 database="mini_checkers_schema_test_$(date -u +%Y%m%d_%H%M%S)_$$"
 created=false
 cleanup() {
   if [[ "$created" == true ]]; then
-    docker compose exec -T postgres dropdb -U mini_checkers -- "$database"
+    docker compose exec -T "$primary" dropdb -U mini_checkers -- "$database"
   fi
 }
 trap cleanup EXIT
 
 sql() {
-  docker compose exec -T postgres psql -X -v ON_ERROR_STOP=1 \
+  docker compose exec -T "$primary" psql -X -v ON_ERROR_STOP=1 \
     -U mini_checkers -d "$database" -tAc "$1"
 }
 apply_schema() {
-  docker compose exec -T -e 'PGOPTIONS=-c client_min_messages=warning' postgres \
+  docker compose exec -T -e 'PGOPTIONS=-c client_min_messages=warning' "$primary" \
     psql -X -v ON_ERROR_STOP=1 -U mini_checkers -d "$database" \
     < infrastructure/postgres/schema.sql >/dev/null
 }
@@ -25,7 +26,7 @@ check_rows() {
     (SELECT count(*) FROM moves), (SELECT count(*) FROM outbox_events)')" == '1|1|1|1' ]]
 }
 
-docker compose exec -T postgres createdb -U mini_checkers -T template0 -- "$database"
+docker compose exec -T "$primary" createdb -U mini_checkers -T template0 -- "$database"
 created=true
 apply_schema
 [[ "$(sql "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'")" == 4 ]]

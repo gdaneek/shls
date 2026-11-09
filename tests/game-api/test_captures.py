@@ -19,7 +19,8 @@ def compose(*args):
 
 
 def sql(query):
-    return compose("exec", "-T", "postgres", "psql", "-X", "-v", "ON_ERROR_STOP=1",
+    primary = subprocess.check_output([str(ROOT / "scripts/postgres-primary.sh")], cwd=ROOT).decode().strip()
+    return compose("exec", "-T", primary, "psql", "-X", "-v", "ON_ERROR_STOP=1",
                    "-U", "mini_checkers", "-d", "mini_checkers", "-tAc", query)
 
 

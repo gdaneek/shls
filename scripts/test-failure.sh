@@ -4,6 +4,7 @@
 # Recovery time includes Docker's healthcheck interval, not just HTTP downtime.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+primary="$(scripts/postgres-primary.sh)"
 failures=0
 restart_services=()
 cleanup() {
@@ -23,7 +24,7 @@ wait_for() {
     sleep 1
   done
 }
-sql() { docker compose exec -T postgres psql -X -v ON_ERROR_STOP=1 -U mini_checkers -d mini_checkers -tAc "$1"; }
+sql() { docker compose exec -T "$primary" psql -X -v ON_ERROR_STOP=1 -U mini_checkers -d mini_checkers -tAc "$1"; }
 api() { docker compose exec -T game-api curl -sS --max-time 8 "$@"; }
 request_status() { api -o /dev/null -w '%{http_code}' "http://127.0.0.1:8000/$1"; }
 id() { docker compose ps -aq "$1"; }
@@ -43,7 +44,7 @@ cache_recovered() {
   api -D - "http://127.0.0.1:8000/games/$game" | grep -qi 'x-cache: HIT'
 }
 
-healthy game-api && healthy event-worker && healthy postgres && healthy redis && healthy rabbitmq
+healthy game-api && healthy event-worker && healthy postgres && healthy postgres-standby && healthy redis && healthy rabbitmq
 created="$(api -f -X POST http://127.0.0.1:8000/games)"
 game="$(jq -er '.game_id' <<<"$created")"
 token="$(jq -er '.player_token' <<<"$created")"
@@ -57,7 +58,7 @@ restart_test() {
   count="$(restarts "$service")"; start=$SECONDS
   case "$service" in
     game-api|event-worker) docker compose exec -T "$service" sh -c 'kill -TERM 1' ;;
-    postgres) docker compose exec -T --user postgres postgres sh -c 'kill -QUIT 1' ;;
+    postgres|postgres-standby) docker compose exec -T --user postgres "$service" sh -c 'kill -QUIT 1' ;;
     redis) docker compose exec -T redis redis-cli shutdown nosave ;;
     rabbitmq) docker compose exec -T rabbitmq rabbitmqctl stop >/dev/null ;;
   esac || trigger_status=$?
@@ -79,7 +80,7 @@ restart_test game-api 30
 check test "$(api -f "http://127.0.0.1:8000/games/$game" | jq -r .game_id)" = "$game"
 restart_test event-worker 30
 restart_test redis 30
-restart_test postgres 60
+restart_test "$primary" 60
 check test "$(request_status health/ready)" = 200
 check test "$(sql "SELECT status FROM games WHERE id = '$game'")" = waiting
 restart_test rabbitmq 60
@@ -104,13 +105,13 @@ docker compose start redis >/dev/null
 check wait_for 30 cache_recovered
 
 echo '--- PostgreSQL outage: live=200, ready=503, writes=503; recover connections'
-restart_services+=(postgres)
-docker compose stop postgres >/dev/null
+restart_services+=("$primary")
+docker compose stop "$primary" >/dev/null
 check test "$(request_status health/live)" = 200
 check test "$(request_status health/ready)" = 503
 check test "$(api -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8000/games)" = 503
-docker compose start postgres >/dev/null
-check wait_for 60 healthy postgres
+docker compose start "$primary" >/dev/null
+check wait_for 60 healthy "$primary"
 ready() { [[ "$(request_status health/ready)" == 200 ]]; }
 check wait_for 30 ready
 check test "$(sql "SELECT status FROM games WHERE id = '$game'")" = finished

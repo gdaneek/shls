@@ -41,7 +41,9 @@ hello_in_container() {
 }
 
 postgres_query() {
-  [[ "$(docker compose exec -T postgres \
+  local primary
+  primary="$(scripts/postgres-primary.sh)" || return 1
+  [[ "$(docker compose exec -T "$primary" \
     psql -U mini_checkers -d mini_checkers -tAc 'SELECT 1')" == "1" ]]
 }
 
@@ -49,7 +51,7 @@ redis_ping() {
   [[ "$(docker compose exec -T redis redis-cli ping)" == "PONG" ]]
 }
 
-for service in frontend game-api event-worker postgres redis rabbitmq; do
+for service in frontend game-api event-worker postgres postgres-standby redis rabbitmq; do
   check "$service container is healthy" is_healthy "$service"
 done
 
@@ -59,11 +61,12 @@ check "frontend serves HTML" docker compose exec -T frontend \
 check "frontend proxies API requests" docker compose exec -T frontend \
   wget -q -O /dev/null http://127.0.0.1:8080/api/hello
 check "postgres executes SELECT 1" postgres_query
+check "exactly one PostgreSQL node is writable" scripts/postgres-primary.sh
 check "redis answers PONG" redis_ping
 check "rabbitmq AMQP listener accepts connections" \
   docker compose exec -T rabbitmq rabbitmq-diagnostics -q check_port_connectivity
 
-for service in game-api postgres redis rabbitmq event-worker; do
+for service in game-api postgres postgres-standby redis rabbitmq event-worker; do
   check "$service has no ports published on the host" not_published "$service"
 done
 

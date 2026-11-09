@@ -4,6 +4,11 @@
 # Requires the normal firewall and stack to be up, jq, and sudo access to nft.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+primary="$(scripts/postgres-primary.sh)"
+case "$primary" in
+  postgres) primary_ip=10.10.2.3 ;;
+  postgres-standby) primary_ip=10.10.2.5 ;;
+esac
 
 nft=(sudo -n /usr/sbin/nft)
 ((EUID == 0)) && nft=(/usr/sbin/nft)
@@ -37,7 +42,7 @@ expect_code() {
   echo "PASS $1: HTTP $actual"
 }
 database_works() {
-  [[ "$(docker compose exec -T postgres psql -X -v ON_ERROR_STOP=1 \
+  [[ "$(docker compose exec -T "$primary" psql -X -v ON_ERROR_STOP=1 \
     -U mini_checkers -d mini_checkers -tAc 'SELECT 1')" == 1 ]]
 }
 
@@ -54,7 +59,7 @@ database_works
 game="$(api -f -X POST http://127.0.0.1:8000/games | jq -er .game_id)"
 expect_code "/games/$game" 200
 
-echo "INFO applying temporary DROP for game-api -> postgres in bridge $table"
+echo "INFO applying temporary DROP for game-api -> $primary ($primary_ip) in bridge $table"
 # Mark ownership before loading so SIGINT/TERM immediately after nft also
 # executes rollback. A per-process name avoids touching another test's table.
 applied=true
@@ -62,7 +67,7 @@ applied=true
 table bridge $table {
   chain forward {
     type filter hook forward priority -10; policy accept;
-    meta ibrname "mc-data" ip saddr 10.10.2.2 ip daddr 10.10.2.3 tcp dport 5432 counter drop comment "test: deny required API to PostgreSQL"
+    meta ibrname "mc-data" ip saddr 10.10.2.2 ip daddr $primary_ip tcp dport 5432 counter drop comment "test: deny required API to PostgreSQL"
   }
 }
 NFT
