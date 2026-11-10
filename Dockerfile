@@ -21,8 +21,8 @@ RUN --mount=type=cache,target=/build,sharing=locked \
     cmake -S . -B /build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON \
     && cmake --build /build --parallel 4 \
     && ctest --test-dir /build --output-on-failure \
-    && mkdir -p /out \
-    && cp /build/game-api /build/event-worker /out/
+    && mkdir -p /src/build \
+    && cp /build/game-api /build/event-worker /src/build/
 
 FROM debian:bookworm-slim AS runtime
 
@@ -33,12 +33,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 USER 10001:10001
 
 FROM runtime AS game-api
-COPY --from=build /out/game-api /usr/local/bin/game-api
+COPY --from=build /src/build/game-api /usr/local/bin/game-api
 COPY infra/postgres/schema.sql /usr/local/share/mini-checkers/schema.sql
 ENV POSTGRES_SCHEMA_FILE=/usr/local/share/mini-checkers/schema.sql
 EXPOSE 8000
 ENTRYPOINT ["/usr/local/bin/game-api"]
 
 FROM runtime AS event-worker
-COPY --from=build /out/event-worker /usr/local/bin/event-worker
+COPY --from=build /src/build/event-worker /usr/local/bin/event-worker
 ENTRYPOINT ["/usr/local/bin/event-worker"]
