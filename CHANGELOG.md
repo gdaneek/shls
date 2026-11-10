@@ -64,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Switched the Sphinx documentation to the Read the Docs theme.
 - Consolidated local build outputs and default test screenshots under `build/`.
 - C++ service images now build and run GoogleTest checks in the Docker build stage.
 - Consolidated project headers in `shls/`, implementation sources in `src/`, tests in `tests/`, and infrastructure in `infra/`.

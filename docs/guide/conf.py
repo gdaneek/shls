@@ -9,12 +9,11 @@ exclude_patterns = ["_build", "user/**", "operations/**", "development/testing.m
 myst_heading_anchors = 3
 graphviz_output_format = "svg"
 
-html_theme = "alabaster"
+html_theme = "sphinx_rtd_theme"
 html_title = "Mini Checkers — документация"
+html_static_path = ["_theme"]
+html_css_files = ["custom.css"]
 html_theme_options = {
-    "description": "Возможности и архитектура",
-    "page_width": "1100px",
-    "sidebar_width": "245px",
-    "font_family": "system-ui, sans-serif",
-    "font_size": "16px",
+    "navigation_depth": 3,
+    "style_external_links": True,
 }
