@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - GitHub Actions C++ build and tests for pushes and pull requests to `dev`, with a README status badge.
+- GoogleTest unit checks for game rules, API helpers, publisher, and both service entry points, registered with CTest.
 - MIT license.
 - Initial project description in Russian.
 - Common C++ and CMake ignore rules.
@@ -62,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- C++ service images now build and run GoogleTest checks in the Docker build stage.
 - Consolidated project headers in `shls/`, implementation sources in `src/`, tests in `tests/`, and infrastructure in `infra/`.
 
 ### Fixed

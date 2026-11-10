@@ -27,9 +27,6 @@ target_link_libraries(game-api PRIVATE Drogon::Drogon rabbitmq::rabbitmq-static)
 add_executable(event-worker src/event-worker/main.cc)
 target_link_libraries(event-worker PRIVATE rabbitmq::rabbitmq-static)
 
-# Standalone domain checks: no DB, browser or extra testing dependencies.
-add_executable(game-rules-test tests/game-api/game_rules_test.cc src/game-api/game_rules.cc)
-target_include_directories(game-rules-test PRIVATE "${PROJECT_SOURCE_DIR}")
 if(BUILD_TESTING)
-  add_test(NAME game-rules COMMAND game-rules-test)
+  add_subdirectory(tests)
 endif()
