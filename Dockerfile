@@ -13,14 +13,14 @@ COPY CMakeLists.txt ./
 COPY third-party ./third-party
 COPY shls ./shls
 COPY src ./src
-COPY tests/game-api/game_rules_test.cc ./tests/game-api/game_rules_test.cc
+COPY tests ./tests
 
 # The cache mount keeps downloaded dependencies and object files between
 # builds, so a code change does not re-clone and rebuild Drogon.
 RUN --mount=type=cache,target=/build,sharing=locked \
-    cmake -S . -B /build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
-    && cmake --build /build --target game-api event-worker game-rules-test --parallel "$(nproc)" \
-    && /build/game-rules-test \
+    cmake -S . -B /build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON \
+    && cmake --build /build --parallel 4 \
+    && ctest --test-dir /build --output-on-failure \
     && mkdir -p /out \
     && cp /build/game-api /build/event-worker /out/
 
