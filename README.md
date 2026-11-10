@@ -1,5 +1,7 @@
 # Mini Checkers
 
+[![CI](https://github.com/gdaneek/shls-project/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/gdaneek/shls-project/actions/workflows/ci.yml?query=branch%3Adev)
+
 Mini Checkers — учебное веб-приложение для игры в шашки вдвоём.
 
 ## Возможности
