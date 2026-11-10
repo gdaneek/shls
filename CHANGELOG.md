@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- GitHub Actions C++ build and tests for pushes and pull requests to `dev`, with a README status badge.
 - MIT license.
 - Initial project description in Russian.
 - Common C++ and CMake ignore rules.
