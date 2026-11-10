@@ -1,0 +1,51 @@
+digraph MiniCheckers {
+  graph [rankdir=TB, bgcolor="transparent", pad="0.25", nodesep="0.4", ranksep="0.6", fontname="DejaVu Sans", fontsize=13];
+  node [shape=box, style="rounded,filled", color="#56728a", fillcolor="#eef4f8", fontname="DejaVu Sans", fontsize=11, margin="0.18,0.12"];
+  edge [color="#587083", fontname="DejaVu Sans", fontsize=9, arrowsize=0.7];
+
+  browser [label="Игрок / зритель\nбраузер или curl", fillcolor="#ffffff"];
+
+  subgraph cluster_public {
+    label="public · 10.10.1.0/24";
+    color="#a7c1d4";
+    style="rounded";
+    frontend [label="frontend .3:8080\nNginx + HTML/CSS/JS"];
+    api [label="game-api .2:8000\nC++20 + Drogon\nтакже в data и messaging", fillcolor="#dfeffa"];
+  }
+
+  subgraph cluster_data {
+    label="data · 10.10.2.0/24 · internal";
+    color="#a7c1d4";
+    style="rounded";
+    pg [label="postgres .3\nPostgreSQL 17", fillcolor="#f1f7e8"];
+    pg2 [label="postgres-standby .5\nPostgreSQL 17", fillcolor="#f1f7e8"];
+    redis [label="redis .4\nкеш game:{id}", fillcolor="#f1f7e8"];
+  }
+
+  subgraph cluster_messaging {
+    label="messaging · 10.10.3.0/24 · internal";
+    color="#a7c1d4";
+    style="rounded";
+    mq1 [label="rabbitmq .3", fillcolor="#fff4e5"];
+    mq2 [label="rabbitmq-2 .5", fillcolor="#fff4e5"];
+    mq3 [label="rabbitmq-3 .6", fillcolor="#fff4e5"];
+    worker [label="event-worker .4\nC++20 + JSON log", fillcolor="#fff4e5"];
+    {rank=same; mq1; mq2; mq3;}
+  }
+
+  browser -> frontend [label="127.0.0.1:8000"];
+  frontend -> api [label="/api/*"];
+  api -> pg [label="SQL :5432"];
+  api -> pg2 [label="SQL :5432"];
+  pg -> pg2 [dir=both, style=dashed, label="async WAL\nроль меняется"];
+  api -> redis [dir=both, label="cache-aside :6379"];
+  api -> mq1 [label="AMQP :5672\npublish + confirm"];
+  api -> mq2;
+  api -> mq3;
+  mq1 -> worker [dir=both, label="deliver / ACK"];
+  mq2 -> worker [dir=both];
+  mq3 -> worker [dir=both];
+  mq1 -> mq2 [dir=both, style=dashed, constraint=false, label="quorum"];
+  mq2 -> mq3 [dir=both, style=dashed, constraint=false];
+  mq3 -> mq1 [dir=both, style=dashed, constraint=false];
+}

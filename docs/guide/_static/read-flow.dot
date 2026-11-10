@@ -1,0 +1,19 @@
+digraph ReadFlow {
+  graph [rankdir=TB, bgcolor="transparent", pad="0.25", nodesep="0.4", ranksep="0.55", fontname="DejaVu Sans"];
+  node [shape=box, style="rounded,filled", color="#56728a", fillcolor="#eef4f8", fontname="DejaVu Sans", fontsize=11, margin="0.16,0.1"];
+  edge [color="#587083", fontname="DejaVu Sans", fontsize=10, arrowsize=0.7];
+  request [label="GET через frontend", fillcolor="#ffffff"];
+  lookup [label="API: запрос в Redis"];
+  hit [label="HIT: возврат кеша", fillcolor="#f1f7e8"];
+  miss [label="MISS: API читает PostgreSQL", fillcolor="#f1f7e8"];
+  fill [label="API заполняет Redis с TTL", fillcolor="#f1f7e8"];
+  bypass [label="BYPASS: API читает PostgreSQL\nбез доступного Redis", fillcolor="#f1f7e8"];
+  response [label="HTTP ответ клиенту", fillcolor="#ffffff"];
+  request -> lookup;
+  lookup -> hit [label="ключ найден"];
+  lookup -> miss [label="ключ отсутствует"];
+  lookup -> bypass [label="Redis недоступен"];
+  miss -> fill -> response;
+  hit -> response;
+  bypass -> response;
+}
