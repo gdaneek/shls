@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- GoogleTest unit checks for game rules, API helpers, publisher, and both service entry points, registered with CTest.
 - MIT license.
 - Initial project description in Russian.
 - Common C++ and CMake ignore rules.
