@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Documentation build on tags and releases, workflow status badges, and technology badges.
 - Sphinx architecture guide with C4 diagrams and a README-based landing page.
 - GitHub Actions C++ build and tests for pushes and pull requests to `dev`, with a README status badge.
 - GoogleTest unit checks for game rules, API helpers, publisher, and both service entry points, registered with CTest.
