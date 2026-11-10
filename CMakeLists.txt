@@ -13,6 +13,18 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(CTest)
 
+option(ENABLE_COVERAGE "Collect coverage for project C++ targets with GCC" OFF)
+if(ENABLE_COVERAGE AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  message(FATAL_ERROR "ENABLE_COVERAGE requires GCC and gcov")
+endif()
+
+function(enable_project_coverage target)
+  if(ENABLE_COVERAGE)
+    target_compile_options(${target} PRIVATE --coverage -O0 -g)
+    target_link_options(${target} PRIVATE --coverage)
+  endif()
+endfunction()
+
 add_subdirectory(third-party)
 
 add_executable(game-api
@@ -23,9 +35,11 @@ add_executable(game-api
 )
 target_include_directories(game-api PRIVATE "${PROJECT_SOURCE_DIR}")
 target_link_libraries(game-api PRIVATE Drogon::Drogon rabbitmq::rabbitmq-static)
+enable_project_coverage(game-api)
 
 add_executable(event-worker src/event-worker/main.cc)
 target_link_libraries(event-worker PRIVATE rabbitmq::rabbitmq-static)
+enable_project_coverage(event-worker)
 
 if(BUILD_TESTING)
   add_subdirectory(tests)
