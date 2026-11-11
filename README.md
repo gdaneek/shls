@@ -64,6 +64,8 @@ docker compose down        # остановка с сохранением дан
 
 Для повторного запуска или пересборки используйте команду `docker compose up --build -d --wait --wait-timeout 240`. Не удаляйте Docker-тома, если хотите сохранить партии.
 
+Проверки работающего стенда описаны в `scripts/integration/README.md`.
+
 ## Резервные копии
 
 ```bash
