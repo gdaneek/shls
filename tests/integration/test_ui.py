@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
-"""Frontend HTTP and real Firefox checks. Python stdlib; no npm/Selenium.
-
-Run: python3 tests/integration/test_ui.py [--docker-bridge] [--http-only]
-Needs Firefox + geckodriver for browser checks. FRONTEND_URL defaults to
-http://127.0.0.1:8000. --docker-bridge uses a temporary localhost test proxy
-through `docker compose exec frontend nc` when a VPN blocks Docker's host port;
-it tests the real Nginx/UI/API, but NOT the host port publication itself.
+"""Проверяет HTTP и игру в настоящем Firefox: вкладки игроков, автообновление, взятия и дамки.
+Для браузерных сценариев нужны Firefox и geckodriver, а --http-only оставляет только HTTP-проверки.
+Флаг --docker-bridge обходит блокировку хостового порта через тестовый прокси, но не проверяет сам этот порт.
 """
 
 import argparse

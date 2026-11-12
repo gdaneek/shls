@@ -1,4 +1,6 @@
-"""Exercise the real backup/restore tools against a new, disposable database."""
+"""Проверяет создание бэкапа и восстановление партии, игроков и хода в отдельную базу.
+Также проверяет права архива, ротацию и запрет перезаписи существующей базы.
+"""
 
 import os
 from pathlib import Path

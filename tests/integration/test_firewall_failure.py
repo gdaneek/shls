@@ -1,4 +1,7 @@
-"""Block an essential SQL connection, observe 503, then restore the same policy."""
+"""Временно блокирует соединение API с PostgreSQL и проверяет переход ответов 200 → 503 → 200.
+Проверяет счётчик отброшенных пакетов, откат временного правила и сохранность основной политики.
+Для запуска нужны CHECKERS_DISRUPTIVE=1 и права на управление nftables.
+"""
 
 import os
 import re

@@ -1,4 +1,7 @@
-"""Read-only startup checks for a running Compose stack."""
+"""Проверяет готовность контейнеров, ответы API и frontend, доступность базы, кеша и quorum-очереди.
+Проверяет, что на хост опубликован только порт frontend.
+Запрос через этот порт с хоста отдельно включается через CHECKERS_HOST_TEST=1.
+"""
 
 import json
 import os

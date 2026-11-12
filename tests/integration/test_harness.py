@@ -1,4 +1,6 @@
-"""Exercise failure cleanup without stopping real services."""
+"""Проверяет восстановление контейнеров и политики перезапуска при ошибках и прерывании теста.
+Вызовы Docker заменены моками, поэтому реальные сервисы не останавливаются.
+"""
 
 import signal
 import unittest

@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Russian-checkers API checks on the local demo stack (Python stdlib).
-
-Each test creates NEW games; SQL only arranges those test fixtures, never a
-user's existing game. The API restart test requires CHECKERS_DISRUPTIVE=1.
+"""Проверяет через API обязательные взятия, цепочки, дамки, победу и конкурирующие ходы.
+Позиции подготавливаются SQL-запросами только в новых тестовых партиях.
+Проверка сохранения цепочки после рестарта API включается через CHECKERS_DISRUPTIVE=1.
 """
 import concurrent.futures
 import json

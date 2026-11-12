@@ -1,4 +1,6 @@
-"""Small helpers for checks against the running local Compose stack."""
+"""Общие функции для обращения к Docker Compose, API, базе данных и очереди.
+Помогают создавать тестовые партии, ждать восстановления и возвращать остановленные контейнеры.
+"""
 
 from contextlib import contextmanager
 import json

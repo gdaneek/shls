@@ -1,4 +1,7 @@
-"""Process recovery, degraded operation, persistent messages and outbox replay."""
+"""Проверяет перезапуск процессов и работу приложения при отказах базы, кеша и брокера.
+Проверяет сохранность сообщений и доставку событий из outbox после восстановления.
+Остановки сервисов выполняются только при CHECKERS_DISRUPTIVE=1.
+"""
 
 import time
 import unittest

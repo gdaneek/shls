@@ -1,4 +1,6 @@
-"""Database, cache, authorization, concurrent writes and event delivery."""
+"""Проверяет путь партии через PostgreSQL, Redis и очередь событий.
+Проверяет кеширование, авторизацию, отклонение неверных ходов и защиту от одновременных записей.
+"""
 
 import concurrent.futures
 import unittest

@@ -1,4 +1,7 @@
-"""Crash the queue leader and the actual consumer connection node."""
+"""Проверяет сохранность событий при аварии лидера очереди RabbitMQ и выбор нового лидера.
+Отдельно проверяет переподключение worker после отказа его узла без перезапуска клиентов.
+Аварийные сценарии включаются через CHECKERS_DISRUPTIVE=1.
+"""
 
 from contextlib import ExitStack
 import json

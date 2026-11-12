@@ -1,4 +1,6 @@
-"""Schema initialization and compatibility in a newly created temporary DB."""
+"""Проверяет создание SQL-схемы, повторное применение и обновление старых таблиц без потери данных.
+Работает в отдельной временной базе и сверяет SQL-файл с копией в образе API.
+"""
 
 import unittest
 import uuid

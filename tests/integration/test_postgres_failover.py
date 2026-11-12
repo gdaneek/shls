@@ -1,4 +1,7 @@
-"""Manual PostgreSQL failover, cache invalidation and rewind/rejoin."""
+"""Проверяет аварийное завершение PostgreSQL primary и управляемое переключение на standby.
+Проверяет чтение и запись после переключения, очистку кеша и возврат старого узла через pg_rewind.
+Запуск с CHECKERS_DISRUPTIVE=1 меняет роли узлов и адрес базы в конфигурации.
+"""
 
 import time
 import unittest
