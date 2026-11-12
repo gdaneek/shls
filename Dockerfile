@@ -14,6 +14,7 @@ COPY third-party ./third-party
 COPY shls ./shls
 COPY src ./src
 COPY tests ./tests
+COPY infra/postgres/schema.sql ./infra/postgres/schema.sql
 
 # The cache mount keeps downloaded dependencies and object files between
 # builds, so a code change does not re-clone and rebuild Drogon.

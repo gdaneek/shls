@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Frontend HTTP and real Firefox checks. Python stdlib; no npm/Selenium.
 
-Run: python3 tests/frontend/test_ui.py [--docker-bridge] [--http-only]
+Run: python3 scripts/integration/test_ui.py [--docker-bridge] [--http-only]
 Needs Firefox + geckodriver for browser checks. FRONTEND_URL defaults to
 http://127.0.0.1:8000. --docker-bridge uses a temporary localhost test proxy
 through `docker compose exec frontend nc` when a VPN blocks Docker's host port;
