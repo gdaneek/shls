@@ -1,51 +1,68 @@
-# Границы и сетевые связи
+# Сегментация и firewall
 
-Сегменты `public`, `data` и `messaging`, адреса и bridge-firewall описаны в
-`docker-compose.yml` и `infra/firewall/mini-checkers.nft`. Game API подключён
-ко всем трём сетям; worker находится только в `messaging`, а frontend — в
-`public`. Сети `data` и `messaging` внутренние.
+## Сети и правила
 
-| Сегмент | Подсеть / мост | Компоненты |
+IP-план задан в `docker-compose.yml`, правила — в
+`infra/firewall/mini-checkers.nft` (таблица `bridge mini_checkers`).
+
+| Сеть / мост | Подсеть | Узлы: последний октет |
 |---|---|---|
-| `public` | `10.10.1.0/24`, `mc-public` | frontend `.3`, Game API `.2` |
-| `data` | `10.10.2.0/24`, `mc-data` | API `.2`, PostgreSQL `.3` и `.5`, Redis `.4`, maintenance `.6` |
-| `messaging` | `10.10.3.0/24`, `mc-msg` | API `.2`, RabbitMQ `.3` / `.5` / `.6`, worker `.4` |
+| `public` / `mc-public` | `10.10.1.0/24` | API `.2`, frontend `.3` |
+| `data` / `mc-data` | `10.10.2.0/24` | API `.2`, PostgreSQL `.3` и `.5`, Redis `.4`, maintenance `.6` |
+| `messaging` / `mc-msg` | `10.10.3.0/24` | API `.2`, RabbitMQ `.3` / `.5` / `.6`, worker `.4` |
 
-## Разрешения
+`data` и `messaging` — внутренние Docker-сети. На хост опубликован только
+frontend: `127.0.0.1:8000` по умолчанию.
 
-| Откуда → куда | Порт | Решение |
+| Новое соединение | TCP-порт назначения | Решение |
 |---|---|---|
-| Хост → frontend | `127.0.0.1:8000` → 8080 | ALLOW, единственный опубликованный порт по умолчанию |
-| frontend → API | TCP 8000 | ALLOW |
-| API → оба узла PostgreSQL | TCP 5432 | ALLOW; приложение использует выбранный primary |
-| PostgreSQL ↔ PostgreSQL | TCP 5432 | ALLOW для репликации и возврата узла |
-| maintenance → PostgreSQL | TCP 5432 | ALLOW при запуске tools-job |
-| API → Redis | TCP 6379 | ALLOW |
-| API / worker → RabbitMQ | TCP 5672 | ALLOW |
-| RabbitMQ ↔ RabbitMQ | TCP 4369, 25672, 35672–35682 | ALLOW для cluster и CLI |
-| worker → API, Redis ↔ PostgreSQL | соответствующие порты | DENY для новых соединений |
-| worker → PostgreSQL / Redis | 5432 / 6379 | Нет прямого маршрута |
+| frontend → API | 8000 | ALLOW |
+| API → оба PostgreSQL | 5432 | ALLOW |
+| PostgreSQL ↔ PostgreSQL | 5432 | ALLOW: репликация/rejoin |
+| maintenance → оба PostgreSQL | 5432 | ALLOW: обслуживание |
+| API → Redis | 6379 | ALLOW |
+| API / worker → все RabbitMQ | 5672 | ALLOW |
+| RabbitMQ ↔ RabbitMQ | 4369, 25672, 35672–35682 | ALLOW: cluster и CLI |
+| Остальные связи внутри проектных мостов | любые | DROP |
 
-Для установленного разрешённого соединения обратный трафик допускается
-через conntrack. Другие новые соединения внутри проектных мостов не проходят
-явную разрешающую политику и отбрасываются. Вне проектных мостов эта таблица
-не предназначена управлять чужими правилами хоста.
+ARP и ответы установленных соединений разрешены. Чужие мосты пропускаются
+без фильтрации этой таблицей. Остальной трафик проектных мостов учитывается
+DROP-счётчиком и логируется с ограничением частоты. Worker → PostgreSQL/Redis
+не имеет прямого маршрута: это сегментация, а не доказательство срабатывания DROP.
 
-Правила применяются командой `infra/firewall/firewall.sh apply`, состояние
-и счётчики доступны через `infra/firewall/firewall.sh status`, откат — через
-`infra/firewall/firewall.sh rollback`. TCP-пробы выполняются командой
-`python3 -B tests/integration/test_network.py -v`: ожидаются `OPEN` для
-разрешённых связей, `FILTERED` при DROP и `UNREACHABLE` между изолированными
-сегментами. Проверка роста DROP-счётчика требует доступного `sudo -n nft`;
-если его нет, тест сообщает `INFO` и проверяет только TCP-результаты.
+## Проверка разрешений и запретов
 
-## Секреты и границы
+```bash
+infra/firewall/firewall.sh apply
+infra/firewall/firewall.sh status
+python3 -B tests/integration/test_network.py -v
+```
 
-API получает пароли БД и AMQP; worker — пароль RabbitMQ; frontend секретов
-инфраструктуры не получает. Секреты хранятся в окружении и локальном `.env`,
-не в исходниках. Токен игрока передаётся в `X-Player-Token`, в PostgreSQL
-хранится его SHA-256, а не исходное значение.
+`status` показывает все проектные правила и счётчики. Тест делает TCP-пробы
+по IP: `OPEN` — разрешено, `FILTERED` — таймаут при DROP, `UNREACHABLE` —
+изоляция сегментов. Рост DROP проверяется при доступном `sudo -n nft`;
+иначе выводится `INFO`. Один лишь сбой DNS не считается сетевой проверкой.
+Откат: `infra/firewall/firewall.sh rollback`. После перезагрузки хоста правила
+нужно применить заново.
 
-Текущий стенд ограничивает вход loopback-адресом и сегментами, но не включает
-TLS внутри сетей и полноценные учётные записи. Отдельная политика для
-доступа по Интернету в проекте не настроена.
+## Запрет необходимой связи
+
+Проверка поведения API при потере доступа к БД:
+
+```bash
+CHECKERS_DISRUPTIVE=1 python3 -B tests/integration/test_firewall_failure.py -v
+```
+
+Тест создаёт временную таблицу с DROP API → текущий PostgreSQL primary.
+Readiness и чтение после очистки кеша должны дать **503**, liveness — **200**,
+а локальный SQL-запрос в контейнере БД остаётся успешным. После удаления
+таблицы ответы возвращаются к **200**; основная политика не меняется.
+Нужны права на nftables; тест прерывает SQL-связь на время проверки.
+
+## Прикладные ограничения доступа
+
+Токен игрока — 32 случайных байта; в БД хранится SHA-256, в запросе —
+`X-Player-Token`. Размер тела ограничен 1 КиБ. Frontend/API/worker работают
+без root и лишних capabilities; секреты передаются через локальный `.env`.
+У приложения пока административный пользователь БД. TLS и удалённый доступ
+не настроены: это локальный стенд, а не публичное развёртывание.

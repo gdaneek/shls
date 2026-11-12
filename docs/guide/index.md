@@ -3,20 +3,13 @@
 
 ```{toctree}
 :maxdepth: 2
-:caption: Архитектура
+:caption: Устройство и проверка проекта
 
-architecture/context
 architecture/overview
-architecture/frontend
-architecture/backend
-architecture/flows
-architecture/rules
+development/api
 architecture/storage
-architecture/cache
 architecture/events
 architecture/security
 architecture/reliability
-architecture/service-levels
-development/api
-development/layout
+development/verification
 ```

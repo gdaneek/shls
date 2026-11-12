@@ -8,10 +8,13 @@ digraph WriteFlow {
   cache [label="API: DEL game:{id}\nRedis", fillcolor="#f1f7e8"];
   response [label="HTTP ответ клиенту", fillcolor="#ffffff"];
   publisher [label="Publisher: чтение outbox\nповторная инвалидация кеша"];
-  broker [label="RabbitMQ: publish + confirm", fillcolor="#fff4e5"];
+  broker [label="RabbitMQ: publish", fillcolor="#fff4e5"];
+  confirmed [label="Publisher: confirm → DELETE outbox", fillcolor="#f1f7e8"];
   worker [label="Worker: лог события + ACK", fillcolor="#fff4e5"];
   request -> validate -> tx;
   tx -> cache -> response;
   tx -> publisher [label="асинхронно"];
-  publisher -> broker -> worker;
+  publisher -> broker;
+  broker -> confirmed [label="подтверждение приёма"];
+  broker -> worker [label="доставка"];
 }
