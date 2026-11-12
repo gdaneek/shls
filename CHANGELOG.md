@@ -67,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replaced shell test scenarios with Python unittest and shared fixtures, preserving failure and recovery checks.
 - Moved integration checks to `tests/integration` and operational commands to `infra`.
 - Switched the Sphinx documentation to the Read the Docs theme.
 - Consolidated local build outputs and default test screenshots under `build/`.

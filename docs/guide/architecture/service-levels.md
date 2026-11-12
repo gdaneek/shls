@@ -15,7 +15,7 @@
 увеличения счётчика перезапусков. Цель для каждого такого опыта — **не более
 30 с** для API, worker и Redis, **60 с** для PostgreSQL и RabbitMQ. Запас
 учитывает сетевые таймауты и интервалы healthcheck. Один опыт не является
-измерением среднего MTTR. Проверка: `scripts/test-failure.sh`.
+измерением среднего MTTR. Проверка: `CHECKERS_DISRUPTIVE=1 python3 -B tests/integration/test_failure.py`.
 
 ## SLI и SLO
 
@@ -24,11 +24,11 @@
 
 | Показатель | Цель | Проверка |
 |---|---|---|
-| Корректные ответы на чтение одной тестовой игры | ≥99 из 100 запросов | `scripts/test-slo.sh` |
-| p95 времени корректных чтений из API-контейнера | ≤0,5 с в той же выборке | `scripts/test-slo.sh` |
-| События `game.created`, обработанные worker | 5 из 5 за ≤15 с от начала создания | `scripts/test-slo.sh` |
-| Восстановление после отказа лидера RabbitMQ или узла подключения worker | ≤60 с при двух работающих узлах из трёх | `scripts/test-rabbitmq-failover.sh` |
-| Backup и восстановление контрольных данных | ≤300 с для небольшой тестовой БД | `scripts/test-backup.sh` |
+| Корректные ответы на чтение одной тестовой игры | ≥99 из 100 запросов | `python3 -B tests/integration/test_slo.py` |
+| p95 времени корректных чтений из API-контейнера | ≤0,5 с в той же выборке | `python3 -B tests/integration/test_slo.py` |
+| События `game.created`, обработанные worker | 5 из 5 за ≤15 с от начала создания | `python3 -B tests/integration/test_slo.py` |
+| Восстановление после отказа лидера RabbitMQ или узла подключения worker | ≤60 с при двух работающих узлах из трёх | `CHECKERS_DISRUPTIVE=1 python3 -B tests/integration/test_rabbitmq_failover.py` |
+| Backup и восстановление контрольных данных | ≤300 с для небольшой тестовой БД | `python3 -B tests/integration/test_backup.py` |
 
 Ограничение p95 выбрано для интерактивной игры; 15 с на событие и 60 с на
 восстановление брокера дают запас для переподключений. Пять минут на backup
@@ -37,7 +37,7 @@
 
 Для отказа PostgreSQL отдельно проверяется цель **≤60 с** от аварии primary
 до новой записи на standby при немедленном запуске переключения оператором
-(`scripts/test-postgres-failover.sh`). В неё входят promotion и пересоздание
+(`CHECKERS_DISRUPTIVE=1 python3 -B tests/integration/test_postgres_failover.py`). В неё входят promotion и пересоздание
 API, но не время реакции оператора и возврат старого узла.
 
 Пример проверки 10.11.2026: 100/100 корректных чтений, p95 **0,001289 с**,
