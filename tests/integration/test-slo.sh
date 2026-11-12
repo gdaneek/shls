@@ -5,7 +5,7 @@
 # SLO: >=99% correct reads, p95 <=0.5s, 100% timely events (5 samples).
 # Measure from inside game-api, without Docker exec startup or host/VPN latency.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 temporary="$(mktemp -d)"
 trap 'rm -f "$temporary/reads" "$temporary/logs"; rmdir "$temporary"' EXIT
 

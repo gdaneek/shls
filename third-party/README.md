@@ -31,7 +31,7 @@ cmake --build build --parallel 2
 ```
 
 Use `-DBUILD_TESTING=OFF` to skip GoogleTest. Project unit tests will be added
-alongside game logic; startup checks currently use `scripts/test-startup.sh`.
+alongside game logic; startup checks use `python3 -B tests/integration/test_startup.py`.
 Future GoogleTest directories should include `GoogleTest` before calling
 `gtest_discover_tests()`.
 

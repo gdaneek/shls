@@ -12,7 +12,7 @@ if (( $(id -u) == 0 )); then
   exec gosu postgres "$0" "$@"
 fi
 if [[ -e "$PGDATA/.mini-checkers-fenced" ]]; then
-  echo 'Node is fenced after failover; run scripts/rejoin-postgres.sh, not a normal start' >&2
+  echo 'Node is fenced after failover; run infra/postgres/rejoin-postgres.sh, not a normal start' >&2
   exit 1
 fi
 [[ "${POSTGRES_REPLICATION_PASSWORD:-}" =~ ^[0-9a-fA-F]{64}$ ]] || {

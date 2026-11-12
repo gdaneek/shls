@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Frontend HTTP and real Firefox checks. Python stdlib; no npm/Selenium.
 
-Run: python3 scripts/integration/test_ui.py [--docker-bridge] [--http-only]
+Run: python3 tests/integration/test_ui.py [--docker-bridge] [--http-only]
 Needs Firefox + geckodriver for browser checks. FRONTEND_URL defaults to
 http://127.0.0.1:8000. --docker-bridge uses a temporary localhost test proxy
 through `docker compose exec frontend nc` when a VPN blocks Docker's host port;
@@ -197,7 +197,7 @@ def seed_position(game, pieces, turn="white"):
     for row, col, piece in pieces:
         assert (row + col) % 2 and piece in "wbWB"
         board[row * 8 + col] = piece
-    primary = subprocess.check_output([str(ROOT / "scripts/postgres-primary.sh")], cwd=ROOT).decode().strip()
+    primary = subprocess.check_output([str(ROOT / "infra/postgres/postgres-primary.sh")], cwd=ROOT).decode().strip()
     subprocess.run(["docker", "compose", "exec", "-T", primary, "psql", "-X",
                     "-v", "ON_ERROR_STOP=1", "-U", "mini_checkers", "-d", "mini_checkers",
                     "-c", f"UPDATE games SET board = '{''.join(board)}', current_turn = '{turn}', "

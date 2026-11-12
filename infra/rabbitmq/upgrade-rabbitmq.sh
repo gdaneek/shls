@@ -2,7 +2,7 @@
 # One-time upgrade of the existing single-node demo. Never deletes a queue,
 # resets a RabbitMQ node, or removes volumes. Run without concurrent writes.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 [[ -f .env ]] || { echo 'Create .env first' >&2; exit 1; }
 chmod 600 .env
 # Compose needs the new variable even for exec against the old container.
@@ -43,4 +43,4 @@ echo 'Old game.events queue drained and retained; pending PostgreSQL outbox rows
 infra/firewall/firewall.sh apply
 docker compose up --build -d --wait --wait-timeout 240
 complete=true
-echo 'Upgrade complete. Verify with scripts/test-rabbitmq-failover.sh.'
+echo 'Upgrade complete. Verify with tests/integration/test-rabbitmq-failover.sh.'

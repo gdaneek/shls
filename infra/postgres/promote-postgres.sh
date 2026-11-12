@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Explicit/manual failover. Never promote while the other node can run writes.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 case "${1:-}" in
   postgres) candidate=postgres; old=postgres-standby ;;
   postgres-standby) candidate=postgres-standby; old=postgres ;;

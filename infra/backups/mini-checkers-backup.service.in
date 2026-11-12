@@ -4,7 +4,7 @@ StartLimitIntervalSec=0
 
 [Service]
 Type=oneshot
-ExecStart="@ROOT@/scripts/backup.sh"
+ExecStart="@ROOT@/infra/backups/backup.sh"
 Environment=BACKUP_RETENTION_DAYS=7
 UMask=0077
 TimeoutStartSec=5min

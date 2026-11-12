@@ -3,8 +3,8 @@
 # No containers are stopped. Existing project/host rules are never modified.
 # Requires the normal firewall and stack to be up, jq, and sudo access to nft.
 set -euo pipefail
-cd "$(dirname "$0")/.."
-primary="$(scripts/postgres-primary.sh)"
+cd "$(dirname "$0")/../.."
+primary="$(infra/postgres/postgres-primary.sh)"
 case "$primary" in
   postgres) primary_ip=10.10.2.3 ;;
   postgres-standby) primary_ip=10.10.2.5 ;;

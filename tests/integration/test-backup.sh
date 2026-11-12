@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Real restore into a NEW temporary database, compare records, then remove it.
 set -euo pipefail
-cd "$(dirname "$0")/.."
-primary="$(scripts/postgres-primary.sh)"
+cd "$(dirname "$0")/../.."
+primary="$(infra/postgres/postgres-primary.sh)"
 database=""
 policy_directory=""
 cleanup() {
@@ -28,8 +28,8 @@ docker compose exec -T game-api curl -fsS -X POST "http://127.0.0.1:8000/games/$
 query="SELECT status, board, current_turn, version FROM games WHERE id = '$game';"
 expected="$(sql mini_checkers "$query")"
 start=$SECONDS
-archive="$(scripts/backup.sh)"
-database="$(scripts/restore.sh "$archive")"
+archive="$(infra/backups/backup.sh)"
+database="$(infra/backups/restore.sh "$archive")"
 [[ "$(sql "$database" "$query")" == "$expected" ]]
 [[ "$(sql "$database" "SELECT count(*) FROM game_players WHERE game_id = '$game'")" == 2 ]]
 [[ "$(sql "$database" "SELECT move_no || '|' || from_cell || '|' || to_cell FROM moves WHERE game_id = '$game'")" == '1|40|33' ]]
@@ -38,10 +38,10 @@ duration=$((SECONDS - start))
 echo "PASS restore: game $game, 2 players, 1 move; ${duration}s <= 300s; $archive"
 
 # Safety guards: refuse an existing target and the application's live DB.
-if scripts/restore.sh "$archive" "$database" >/dev/null 2>&1; then
+if infra/backups/restore.sh "$archive" "$database" >/dev/null 2>&1; then
   echo 'FAIL: restore overwrote an existing database' >&2; exit 1
 fi
-if scripts/restore.sh "$archive" mini_checkers >/dev/null 2>&1; then
+if infra/backups/restore.sh "$archive" mini_checkers >/dev/null 2>&1; then
   echo 'FAIL: restore accepted the live database' >&2; exit 1
 fi
 [[ "$(stat -c %a "$archive")" == 600 ]]
@@ -51,7 +51,7 @@ echo 'PASS restore safety checks and archive permissions (600)'
 policy_directory="$(mktemp -d "$PWD/backups/policy-test-XXXXXX")"
 touch -d '8 days ago' "$policy_directory/mini-checkers-old.dump"
 touch -d '1 day ago' "$policy_directory/mini-checkers-recent.dump"
-BACKUP_DIR="$policy_directory" scripts/backup.sh >/dev/null
+BACKUP_DIR="$policy_directory" infra/backups/backup.sh >/dev/null
 [[ ! -e "$policy_directory/mini-checkers-old.dump" ]]
 [[ -e "$policy_directory/mini-checkers-recent.dump" ]]
 echo 'PASS retention: old archive removed, recent archive retained'

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Restore into a NEW test database only; never overwrite the live database.
-# Usage: scripts/restore.sh ARCHIVE [mini_checkers_restore_NAME]
+# Usage: infra/backups/restore.sh ARCHIVE [mini_checkers_restore_NAME]
 # stdout: restored database name.
 set -euo pipefail
 [[ $# -ge 1 && $# -le 2 ]] || { echo "usage: $0 ARCHIVE [TEST_DB]" >&2; exit 2; }
@@ -11,8 +11,8 @@ database="${2:-mini_checkers_restore_$(date -u +%Y%m%d_%H%M%S)_$$}"
   exit 2
 }
 [[ -s "$archive" ]] || { echo 'Archive is empty or missing' >&2; exit 2; }
-cd "$(dirname "$0")/.."
-primary="$(scripts/postgres-primary.sh)"
+cd "$(dirname "$0")/../.."
+primary="$(infra/postgres/postgres-primary.sh)"
 docker compose exec -T "$primary" pg_restore --list <"$archive" >/dev/null
 # createdb fails if this name already exists. No --clean / --create restore.
 docker compose exec -T "$primary" sh -c \

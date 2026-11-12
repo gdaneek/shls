@@ -2,9 +2,9 @@
 # Consistent logical PostgreSQL backup outside the container/data volume.
 # stdout: completed archive path (for scripts); diagnostics go to stderr.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 umask 077
-primary="$(scripts/postgres-primary.sh)"
+primary="$(infra/postgres/postgres-primary.sh)"
 
 directory="${BACKUP_DIR:-$PWD/backups}"
 days="${BACKUP_RETENTION_DAYS:-7}"

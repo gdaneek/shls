@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Print the physical service currently accepting writes. Fail on split brain.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 primary=""
 for node in postgres postgres-standby; do
   if [[ "$(docker compose exec -T "$node" psql -X -U mini_checkers -d mini_checkers \

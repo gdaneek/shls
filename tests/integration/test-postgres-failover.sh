@@ -2,7 +2,7 @@
 # Local demo: SIGKILL primary, explicit promotion, API writes on the new
 # primary, then pg_rewind rejoin. Roles may swap; no volumes are deleted.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 completed=false
 sentinel=""
 cleanup() {
@@ -22,7 +22,7 @@ wait_for() {
     sleep 1
   done
 }
-old="$(scripts/postgres-primary.sh)"
+old="$(infra/postgres/postgres-primary.sh)"
 if [[ "$old" == postgres ]]; then candidate=postgres-standby; else candidate=postgres; fi
 [[ "$(sql "$candidate" 'SELECT pg_is_in_recovery()')" == t ]]
 
@@ -43,7 +43,7 @@ sentinel="test:postgres-failover:$game"
 docker compose exec -T redis redis-cli SET "$sentinel" preserve >/dev/null
 api -f "http://127.0.0.1:8000/games/$game" >/dev/null
 echo "PASS streaming replica replayed game $game and its first move"
-scripts/backup.sh >/dev/null
+infra/backups/backup.sh >/dev/null
 
 # These commands deliberately suppress Docker auto-restart; recovery must
 # come from the standby, not from reviving the failed primary.
@@ -54,10 +54,10 @@ docker compose kill -s SIGKILL "$old" >/dev/null
 [[ "$(docker inspect -f '{{.State.Running}}' "$old_id")" == false ]]
 [[ "$(docker inspect -f '{{.State.ExitCode}}' "$old_id")" == 137 ]]
 echo "PASS $old crashed (exit 137), not restarted"
-scripts/promote-postgres.sh "$candidate"
+infra/postgres/promote-postgres.sh "$candidate"
 ready() { [[ "$(api -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/health/ready)" == 200 ]]; }
 wait_for 60 ready
-[[ "$(scripts/postgres-primary.sh)" == "$candidate" ]]
+[[ "$(infra/postgres/postgres-primary.sh)" == "$candidate" ]]
 [[ "$(docker compose exec -T redis redis-cli GET "$sentinel")" == preserve ]]
 [[ "$(docker compose exec -T redis redis-cli EXISTS "game:$game")" == 0 ]]
 echo 'PASS stale game cache cleared, unrelated Redis key preserved'
@@ -72,12 +72,12 @@ duration=$((SECONDS - start))
 ((duration <= 60))
 echo "PASS API redirected/recreated and read/wrote the new primary in ${duration}s <=60s"
 
-scripts/rejoin-postgres.sh "$old"
+infra/postgres/rejoin-postgres.sh "$old"
 [[ "$(sql "$old" 'SELECT pg_is_in_recovery()')" == t ]]
 [[ "$(sql "$old" "SELECT version FROM games WHERE id = '$game'")" == 4 ]]
-[[ "$(scripts/postgres-primary.sh)" == "$candidate" ]]
+[[ "$(infra/postgres/postgres-primary.sh)" == "$candidate" ]]
 [[ "$(docker inspect -f '{{.State.Running}}' "$old_id")" == true ]]
 echo "PASS old primary rejoined as streaming standby; both moves preserved"
-scripts/backup.sh >/dev/null
+infra/backups/backup.sh >/dev/null
 echo "PASS backup works after role switch; current primary=$candidate, standby=$old"
 completed=true

@@ -3,8 +3,8 @@
 # then crash the worker's connection node to verify client reconnection.
 # No queue purge, node reset, volume removal or API/worker recreation.
 set -euo pipefail
-cd "$(dirname "$0")/.."
-primary="$(scripts/postgres-primary.sh)"
+cd "$(dirname "$0")/../.."
+primary="$(infra/postgres/postgres-primary.sh)"
 nodes=(rabbitmq rabbitmq-2 rabbitmq-3)
 stopped=""
 worker_stopped=false

@@ -3,8 +3,8 @@
 # HTTP probes run inside the API container to avoid VPN/host-port dependencies.
 # Recovery time includes Docker's healthcheck interval, not just HTTP downtime.
 set -euo pipefail
-cd "$(dirname "$0")/.."
-primary="$(scripts/postgres-primary.sh)"
+cd "$(dirname "$0")/../.."
+primary="$(infra/postgres/postgres-primary.sh)"
 failures=0
 restart_services=()
 cleanup() {

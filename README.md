@@ -45,7 +45,7 @@ Mini Checkers — веб-приложение для игры в шашки вд
 
 4. Откройте **http://127.0.0.1:8000/**. Другой порт можно задать через `API_PORT` в `.env`.
 
-Если обновляете старую установку с одним RabbitMQ, вместо обычного запуска используйте `scripts/upgrade-rabbitmq.sh`. Существующий `.env` не перезаписывайте и тома не удаляйте.
+Если обновляете старую установку с одним RabbitMQ, вместо обычного запуска используйте `infra/rabbitmq/upgrade-rabbitmq.sh`. Существующий `.env` не перезаписывайте и тома не удаляйте.
 
 ## Как играть
 
@@ -70,15 +70,15 @@ docker compose down        # остановка с сохранением дан
 
 Для повторного запуска или пересборки используйте команду `docker compose up --build -d --wait --wait-timeout 240`. Не удаляйте Docker-тома, если хотите сохранить партии.
 
-Проверки работающего стенда описаны в `scripts/integration/README.md`.
+Проверки работающего стенда описаны в `tests/integration/README.md`.
 
 ## Резервные копии
 
 ```bash
-scripts/backup.sh                      # создать архив БД в backups/
-scripts/restore.sh backups/<имя>.dump   # восстановить в новую тестовую БД
-scripts/backup-timer.sh install        # ежедневный бэкап в 02:00, systemd user timer
-scripts/backup-timer.sh remove         # отключить расписание
+infra/backups/backup.sh                      # создать архив БД в backups/
+infra/backups/restore.sh backups/<имя>.dump   # восстановить в новую тестовую БД
+infra/backups/backup-timer.sh install        # ежедневный бэкап в 02:00, systemd user timer
+infra/backups/backup-timer.sh remove         # отключить расписание
 ```
 
 Архивы хранятся 7 дней. Восстановление создаёт отдельную проверочную БД и не заменяет рабочие партии. Для расписания нужен пользовательский `systemd`.

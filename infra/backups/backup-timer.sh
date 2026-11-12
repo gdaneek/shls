@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # User systemd timer: no sudo or Docker socket mounted in a container.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 directory="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 unit=mini-checkers-backup
 case "${1:-}" in

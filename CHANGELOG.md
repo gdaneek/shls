@@ -67,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Moved integration checks to `tests/integration` and operational commands to `infra`.
 - Switched the Sphinx documentation to the Read the Docs theme.
 - Consolidated local build outputs and default test screenshots under `build/`.
 - Simplified GoogleTest checks to public interfaces and moved Python integration scripts out of `tests/`.

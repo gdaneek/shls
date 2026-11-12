@@ -2,12 +2,12 @@
 # Rewind a STOPPED former primary to the current primary, preserving its old
 # physical contents in a host-side archive before making any changes.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 case "${1:-}" in
   postgres|postgres-standby) target="$1" ;;
   *) echo "usage: $0 STOPPED_NODE" >&2; exit 2 ;;
 esac
-source="$(scripts/postgres-primary.sh)"
+source="$(infra/postgres/postgres-primary.sh)"
 [[ "$source" != "$target" ]] || { echo 'Refusing to rewind the current primary' >&2; exit 1; }
 target_id="$(docker compose ps -aq "$target")"
 [[ -n "$target_id" ]] &&

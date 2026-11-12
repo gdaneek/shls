@@ -7,11 +7,11 @@ frontend/               HTML, CSS, JavaScript, Nginx и его Dockerfile
 shls/                   заголовки C++: API, правила, publisher
 src/game-api/           HTTP-приложение, правила и публикация outbox
 src/event-worker/       отдельный consumer
-infra/postgres/         схема, настройки репликации и maintenance
-infra/rabbitmq/         образ/настройка кластера
+infra/postgres/         схема, репликация, promotion и rejoin
+infra/rabbitmq/         образ, настройка и обновление кластера
 infra/firewall/         nftables и управление таблицей
-infra/backups/          шаблоны systemd unit/timer
-scripts/                бэкап, восстановление и переключение
+infra/backups/          backup/restore, установка systemd unit/timer
+tests/integration/      интеграционные и браузерные проверки
 third-party/            настройки получения C++ зависимостей
 docker-compose.yml      сервисы, сети, тома и конфигурация
 Dockerfile              общая многостадийная сборка C++ сервисов

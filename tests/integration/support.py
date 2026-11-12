@@ -38,7 +38,7 @@ def container_id(service):
 
 
 def primary():
-    return run(str(ROOT / "scripts/postgres-primary.sh")).stdout.strip()
+    return run(str(ROOT / "infra/postgres/postgres-primary.sh")).stdout.strip()
 
 
 def sql(query, database="mini_checkers", node=None):

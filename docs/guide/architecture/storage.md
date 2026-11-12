@@ -5,7 +5,7 @@
 PostgreSQL 17 хранит игры, участников, историю участков хода и outbox.
 API работает с текущим primary; после переключения этим primary может быть
 сервис с именем `postgres-standby`. Определить его можно командой
-`scripts/postgres-primary.sh`.
+`infra/postgres/postgres-primary.sh`.
 
 `infra/postgres/schema.sql` содержит один атомарный `DO`-блок, который API
 читает при запуске. `CREATE TABLE IF NOT EXISTS` и совместимые изменения

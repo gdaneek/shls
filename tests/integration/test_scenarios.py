@@ -13,7 +13,7 @@ class FaultScenarios(unittest.TestCase):
     def scenario(self, name):
         # Do not SIGKILL the shell on a timeout: its EXIT/INT/TERM traps restore
         # the temporary firewall rules and stopped services.
-        result = run(str(ROOT / "scripts" / name), timeout=None, check=False)
+        result = run(str(ROOT / "tests/integration" / name), timeout=None, check=False)
         print(result.stdout, end="")
         self.assertEqual(result.returncode, 0, result.stderr)
 
