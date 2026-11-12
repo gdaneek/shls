@@ -2,10 +2,11 @@
 """Russian-checkers API checks on the local demo stack (Python stdlib).
 
 Each test creates NEW games; SQL only arranges those test fixtures, never a
-user's existing game. One test restarts game-api to verify a durable chain.
+user's existing game. The API restart test requires CHECKERS_DISRUPTIVE=1.
 """
 import concurrent.futures
 import json
+import os
 from pathlib import Path
 import subprocess
 import time
@@ -64,6 +65,7 @@ class Captures(unittest.TestCase):
         game, _, black = fixture([(4, 3, "b"), (3, 2, "w"), (7, 0, "w")], "black")
         self.move(game, black, [4, 3], [2, 1])
 
+    @unittest.skipUnless(os.environ.get("CHECKERS_DISRUPTIVE") == "1", "restarts API; set CHECKERS_DISRUPTIVE=1 on a demo stack")
     def test_chain_survives_api_restart(self):
         game, white, black = fixture([(5, 0, "w"), (7, 6, "w"), (4, 1, "b"), (2, 3, "b"), (0, 7, "b")])
         state = self.move(game, white, [5, 0], [3, 2])

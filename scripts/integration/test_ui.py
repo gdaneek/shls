@@ -207,7 +207,7 @@ def seed_position(game, pieces, turn="white"):
                    cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
 
 
-def capture_checks(b, url):
+def capture_checks(b, url, screenshot):
     white = b.new_tab(url)
     b.click("#create")
     b.wait("document.querySelector('#game-status').textContent === 'Ожидание игрока'")
@@ -228,9 +228,7 @@ def capture_checks(b, url):
     b.wait("document.querySelector('#turn-badge').textContent === 'Продолжите бой'")
     assert b.js("return document.querySelector('.selected').dataset.row === '0' && document.querySelector('.selected').dataset.col === '3'")
     assert b.js("return document.querySelector('[data-row=\"5\"][data-col=\"0\"]').disabled")
-    capture = ROOT / "build/test-artifacts/t01-capture.png"
-    capture.parent.mkdir(parents=True, exist_ok=True)
-    capture.write_bytes(base64.b64decode(b.command("GET", "/screenshot")))
+    screenshot.write_bytes(base64.b64decode(b.command("GET", "/screenshot")))
     b.click('[data-row="4"][data-col="7"]')
     b.wait("document.querySelector('#game-status').textContent === 'Завершена'")
     assert b.js("return document.querySelector('#turn-status').textContent === 'Победили белые' && document.querySelectorAll('.cell.captured').length === 0")
@@ -428,7 +426,7 @@ def main():
             screenshot = Path(os.environ.get("UI_SCREENSHOT", str(ROOT / "build/test-artifacts/t01-ui.png")))
             screenshot.parent.mkdir(parents=True, exist_ok=True)
             browser_checks(browser, url, screenshot)
-            capture_checks(browser, url)
+            capture_checks(browser, url, screenshot.parent / "t01-capture.png")
             print(f"PASS browser scenarios; screenshot: {screenshot}")
     finally:
         if browser:
