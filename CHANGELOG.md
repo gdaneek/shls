@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Documentation page for reliability targets and service-level measurements.
+- Documentation build on tags and releases, workflow status badges, and technology badges.
+- Sphinx architecture guide with C4 diagrams and a README-based landing page.
 - GitHub Actions C++ build and tests for pushes and pull requests to `dev`, with a README status badge.
 - GoogleTest unit checks for game rules, API helpers, publisher, and both service entry points, registered with CTest.
 - MIT license.
@@ -63,6 +66,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Switched the Sphinx documentation to the Read the Docs theme.
+- Consolidated local build outputs and default test screenshots under `build/`.
 - C++ service images now build and run GoogleTest checks in the Docker build stage.
 - Consolidated project headers in `shls/`, implementation sources in `src/`, tests in `tests/`, and infrastructure in `infra/`.
 

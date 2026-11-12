@@ -1,6 +1,12 @@
 # Mini Checkers
 
-[![CI](https://github.com/gdaneek/shls-project/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/gdaneek/shls-project/actions/workflows/ci.yml?query=branch%3Adev)
+[![Tests](https://github.com/gdaneek/shls-project/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/gdaneek/shls-project/actions/workflows/ci.yml?query=branch%3Adev)
+[![Docs](https://github.com/gdaneek/shls-project/actions/workflows/docs.yml/badge.svg)](https://github.com/gdaneek/shls-project/actions/workflows/docs.yml)
+
+![C++20](https://img.shields.io/badge/Code-C%2B%2B20-8E54E9?style=flat&labelColor=333a41)
+![Drogon](https://img.shields.io/badge/Backend-Drogon-7A3DE1?style=flat&labelColor=333a41)
+![PostgreSQL](https://img.shields.io/badge/Data-PostgreSQL-4169E1?style=flat&labelColor=333a41)
+![Redis + RabbitMQ](https://img.shields.io/badge/Infra-Redis%20%2B%20RabbitMQ-FF6600?style=flat&labelColor=333a41)
 
 Mini Checkers — веб-приложение для игры в шашки вдвоём.
 

@@ -1,0 +1,11 @@
+digraph DataModel {
+  graph [rankdir=LR, bgcolor="transparent", pad="0.25", nodesep="0.4", ranksep="0.8", fontname="DejaVu Sans", fontsize=13];
+  node [shape=record, style=filled, color="#56728a", fillcolor="#f1f7e8", fontname="DejaVu Sans", fontsize=10];
+  edge [color="#587083", fontname="DejaVu Sans", fontsize=10, arrowsize=0.7];
+  games [label="{games|id · PK\lstatus\lboard\lcurrent_turn\lwinner\lversion\lcapture_from\lcaptured_cells\lcreated_at / updated_at\l}"];
+  players [label="{game_players|game_id · FK\lside\ltoken_hash\l}"];
+  moves [label="{moves|id · PK\lgame_id · FK\lmove_no / player_side\lfrom_cell / to_cell\lcaptured_cell / promoted\lcreated_at\l}"];
+  outbox [label="{outbox_events|sequence · PK\levent_id · UNIQUE\lgame_id\ltype / request_id\ldata\lcreated_at\l}"];
+  games -> players [label="1 : 1–2"];
+  games -> moves [label="1 : 0..N"];
+}
