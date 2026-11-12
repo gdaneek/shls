@@ -4,7 +4,7 @@ import os
 import re
 import unittest
 
-from support import SERVICES, compose, container_id, run
+from support import compose, run
 
 PG, PG2, REDIS = "10.10.2.3", "10.10.2.5", "10.10.2.4"
 API_PUBLIC, API_DATA, API_MSG = "10.10.1.2", "10.10.2.2", "10.10.3.2"
@@ -87,15 +87,6 @@ class Network(unittest.TestCase):
             ("redis", BROKERS["rabbitmq"], 5672), ("postgres", API_PUBLIC, 8000),
         ]
         self.check_pairs(pairs, "UNREACHABLE")
-
-    def test_only_frontend_port_is_published(self):
-        for service in SERVICES:
-            if service == "frontend":
-                continue
-            with self.subTest(service=service):
-                self.assertEqual(run("docker", "port", container_id(service)).stdout.strip(), "")
-        self.assertTrue(compose("port", "frontend", "8080").startswith("127.0.0.1:"))
-
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

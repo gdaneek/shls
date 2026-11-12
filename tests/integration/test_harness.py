@@ -1,43 +1,57 @@
-"""Check the test harness without changing the running stack."""
+"""Exercise failure cleanup without stopping real services."""
 
-import importlib.util
-import os
-from pathlib import Path
+import signal
 import unittest
 from unittest import mock
 
-
-def load_flows_with_faults_enabled():
-    path = Path(__file__).with_name("test_flows.py")
-    spec = importlib.util.spec_from_file_location("checkers_flows_for_harness", path)
-    module = importlib.util.module_from_spec(spec)
-    with mock.patch.dict(os.environ, {"CHECKERS_DISRUPTIVE": "1"}):
-        spec.loader.exec_module(module)
-    return module
+import support
 
 
 class Cleanup(unittest.TestCase):
-    def test_worker_restarted_when_fixture_creation_fails(self):
-        flows = load_flows_with_faults_enabled()
-        with mock.patch.object(flows, "container_id", return_value="worker-id"), \
-             mock.patch.object(flows, "compose"), \
-             mock.patch.object(flows, "create_game", side_effect=RuntimeError("fixture failed")), \
-             mock.patch.object(flows, "run") as start:
-            with self.assertRaisesRegex(RuntimeError, "fixture failed"):
-                flows.Flows("test_queued_events_survive_worker_stop").test_queued_events_survive_worker_stop()
-            start.assert_called_once_with("docker", "start", "worker-id", timeout=60)
+    def test_stopped_containers_restart_on_error_or_interrupt(self):
+        for error in (RuntimeError("fixture failed"), KeyboardInterrupt()):
+            with self.subTest(error=type(error).__name__), \
+                 mock.patch.object(support, "container_id", side_effect=lambda name: name + "-id"), \
+                 mock.patch.object(support, "compose"), mock.patch.object(support, "run") as run:
+                with self.assertRaises(type(error)):
+                    with support.stopped("redis", "event-worker"):
+                        raise error
+                run.assert_called_once_with("docker", "start", "redis-id", "event-worker-id", timeout=90)
 
-    def test_redis_restarted_when_request_fails(self):
-        flows = load_flows_with_faults_enabled()
-        with mock.patch.object(flows, "container_id", return_value="redis-id"), \
-             mock.patch.object(flows, "compose"), \
-             mock.patch.object(flows, "create_game", return_value={"game_id": "fixture"}), \
-             mock.patch.object(flows, "wait_for"), \
-             mock.patch.object(flows, "request", side_effect=RuntimeError("request failed")), \
-             mock.patch.object(flows, "run") as start:
-            with self.assertRaisesRegex(RuntimeError, "request failed"):
-                flows.Flows("test_redis_outage_falls_back_to_database").test_redis_outage_falls_back_to_database()
-            start.assert_called_once_with("docker", "start", "redis-id", timeout=60)
+    def test_partial_stop_failure_still_restarts_containers(self):
+        with mock.patch.object(support, "container_id", return_value="worker-id"), \
+             mock.patch.object(support, "compose", side_effect=RuntimeError("stop failed")), \
+             mock.patch.object(support, "run") as run:
+            with self.assertRaises(RuntimeError):
+                with support.stopped("event-worker"):
+                    self.fail("stop should fail before the fixture")
+            run.assert_called_once_with("docker", "start", "worker-id", timeout=90)
+
+    def test_crash_restores_policy_even_if_start_fails(self):
+        before = {"Id": "broker-id", "HostConfig": {"RestartPolicy": {"Name": "unless-stopped"}}}
+        down = {"State": {"Running": False, "ExitCode": 137}}
+
+        def command(*args, **kwargs):
+            if args[:2] == ("docker", "start"):
+                raise RuntimeError("start failed")
+
+        with mock.patch.object(support, "inspect", side_effect=[before, down]), \
+             mock.patch.object(support, "compose"), \
+             mock.patch.object(support, "run", side_effect=command) as run:
+            with self.assertRaisesRegex(RuntimeError, "start failed"):
+                with support.crashed("rabbitmq"):
+                    raise AssertionError("delivery failed")
+            self.assertEqual(run.call_args, mock.call("docker", "update", "--restart=unless-stopped", "broker-id"))
+
+    def test_sigterm_unwinds_cleanup_and_restores_handler(self):
+        previous = signal.getsignal(signal.SIGTERM)
+        with mock.patch.object(support, "container_id", return_value="redis-id"), \
+             mock.patch.object(support, "compose"), mock.patch.object(support, "run") as run:
+            with self.assertRaises(KeyboardInterrupt):
+                with support.stopped("redis"):
+                    signal.raise_signal(signal.SIGTERM)
+            run.assert_called_once_with("docker", "start", "redis-id", timeout=90)
+        self.assertEqual(signal.getsignal(signal.SIGTERM), previous)
 
 
 if __name__ == "__main__":

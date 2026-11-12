@@ -5,15 +5,14 @@ import os
 import unittest
 import urllib.request
 
-from support import SERVICES, compose, container_id, primary, redis, run, sql
+from support import SERVICES, compose, container_id, healthy, primary, queue, redis, run, sql
 
 
 class Startup(unittest.TestCase):
     def test_all_services_healthy(self):
         for service in SERVICES:
             with self.subTest(service=service):
-                status = run("docker", "inspect", "-f", "{{.State.Health.Status}}", container_id(service)).stdout.strip()
-                self.assertEqual(status, "healthy")
+                self.assertTrue(healthy(service))
 
     def test_hello_and_frontend(self):
         reply = compose("exec", "-T", "game-api", "curl", "-fsS", "http://127.0.0.1:8000/hello")
@@ -27,12 +26,10 @@ class Startup(unittest.TestCase):
         self.assertEqual(sql("SELECT 1"), "1")
         self.assertEqual(redis("PING"), "PONG")
         compose("exec", "-T", "rabbitmq", "rabbitmq-diagnostics", "-q", "check_port_connectivity", timeout=60)
-        queues = json.loads(compose("exec", "-T", "rabbitmq", "rabbitmqctl", "-q", "list_queues",
-                                    "--online", "--timeout", "5", "name", "type", "members", "online", "--formatter", "json"))
-        queue = next(item for item in queues if item["name"] == "game.events.quorum")
-        self.assertEqual(queue["type"], "quorum")
-        self.assertEqual(len(queue["members"]), 3)
-        self.assertEqual(len(queue["online"]), 3)
+        state = queue()
+        self.assertEqual(state["type"], "quorum")
+        self.assertEqual(len(state["members"]), 3)
+        self.assertEqual(len(state["online"]), 3)
 
     def test_only_frontend_port_is_published(self):
         for service in SERVICES:

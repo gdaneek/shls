@@ -43,4 +43,4 @@ echo 'Old game.events queue drained and retained; pending PostgreSQL outbox rows
 infra/firewall/firewall.sh apply
 docker compose up --build -d --wait --wait-timeout 240
 complete=true
-echo 'Upgrade complete. Verify with tests/integration/test-rabbitmq-failover.sh.'
+echo 'Upgrade complete. Verify with CHECKERS_DISRUPTIVE=1 python3 -B tests/integration/test_rabbitmq_failover.py.'

@@ -24,7 +24,7 @@ import time
 import urllib.error
 import urllib.request
 
-ROOT = Path(__file__).resolve().parents[2]
+from support import ROOT, seed_position, wait_for
 HTTP = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -104,12 +104,7 @@ class Browser:
         return self.command("POST", "/execute/sync", {"script": script, "args": []})
 
     def wait(self, expression, seconds=20):
-        deadline = time.monotonic() + seconds
-        while time.monotonic() < deadline:
-            if self.js("return " + expression):
-                return
-            time.sleep(0.15)
-        raise AssertionError("Browser condition timed out: " + expression)
+        wait_for(lambda: self.js("return " + expression), seconds, interval=0.15)
 
     def element(self, css):
         value = self.command("POST", "/element", {"using": "css selector", "value": css})
@@ -190,23 +185,6 @@ def trace_requests(browser):
     """)
 
 
-def seed_position(game, pieces, turn="white"):
-    # Arrange only a NEW game created by this browser test; there is no
-    # position-editing endpoint in the application.
-    board = ["."] * 64
-    for row, col, piece in pieces:
-        assert (row + col) % 2 and piece in "wbWB"
-        board[row * 8 + col] = piece
-    primary = subprocess.check_output([str(ROOT / "infra/postgres/postgres-primary.sh")], cwd=ROOT).decode().strip()
-    subprocess.run(["docker", "compose", "exec", "-T", primary, "psql", "-X",
-                    "-v", "ON_ERROR_STOP=1", "-U", "mini_checkers", "-d", "mini_checkers",
-                    "-c", f"UPDATE games SET board = '{''.join(board)}', current_turn = '{turn}', "
-                    f"version = version + 1 WHERE id = '{game}'"],
-                   cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
-    subprocess.run(["docker", "compose", "exec", "-T", "redis", "redis-cli", "DEL", f"game:{game}"],
-                   cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
-
-
 def capture_checks(b, url, screenshot):
     white = b.new_tab(url)
     b.click("#create")
@@ -281,13 +259,7 @@ def browser_checks(browser, url, screenshot):
     # Use the UI's noopener link: the new tab must not inherit white's key.
     handles = b.command("GET", "/window/handles")
     b.click('a[target="_blank"]')
-    deadline = time.monotonic() + 10
-    while time.monotonic() < deadline:
-        added = set(b.command("GET", "/window/handles")) - set(handles)
-        if added:
-            break
-        time.sleep(0.15)
-    assert added
+    added = wait_for(lambda: set(b.command("GET", "/window/handles")) - set(handles), seconds=10)
     black = added.pop()
     b.switch(black)
     b.wait("document.querySelectorAll('.cell').length === 64")

@@ -6,53 +6,21 @@ user's existing game. The API restart test requires CHECKERS_DISRUPTIVE=1.
 """
 import concurrent.futures
 import json
-import os
-from pathlib import Path
-import subprocess
-import time
 import unittest
 
-ROOT = Path(__file__).resolve().parents[2]
-
-
-def compose(*args):
-    return subprocess.check_output(["docker", "compose", *args], cwd=ROOT, stderr=subprocess.DEVNULL).decode().strip()
-
-
-def sql(query):
-    primary = subprocess.check_output([str(ROOT / "infra/postgres/postgres-primary.sh")], cwd=ROOT).decode().strip()
-    return compose("exec", "-T", primary, "psql", "-X", "-v", "ON_ERROR_STOP=1",
-                   "-U", "mini_checkers", "-d", "mini_checkers", "-tAc", query)
-
-
-def request(method, path, token=None, body=None):
-    args = ["exec", "-T", "game-api", "curl", "-sS", "--max-time", "8", "-X", method,
-            "-w", "\n%{http_code}", f"http://127.0.0.1:8000{path}"]
-    if token:
-        args += ["-H", "X-Player-Token: " + token]
-    if body is not None:
-        args += ["-H", "Content-Type: application/json", "-d", json.dumps(body)]
-    payload, status = compose(*args).rsplit("\n", 1)
-    return int(status), json.loads(payload)
+from support import (DISRUPTIVE, compose, healthy, joined_game, outbox_empty,
+                     redis, request, seed_position, sql, wait_for, worker_events)
 
 
 def fixture(pieces, turn="white"):
-    _, white = request("POST", "/games")
-    game = white["game_id"]
-    _, black = request("POST", f"/games/{game}/join")
-    board = ["."] * 64
-    for row, col, piece in pieces:
-        assert (row + col) % 2 == 1 and piece in "wbWB"
-        board[row * 8 + col] = piece
-    sql(f"UPDATE games SET board = '{''.join(board)}', current_turn = '{turn}', "
-        f"version = version + 1 WHERE id = '{game}'")
-    compose("exec", "-T", "redis", "redis-cli", "DEL", f"game:{game}")
-    return game, white["player_token"], black["player_token"]
+    game, white, black = joined_game()
+    seed_position(game, pieces, turn)
+    return game, white, black
 
 
 class Captures(unittest.TestCase):
     def move(self, game, token, start, target, status=200):
-        actual, state = request("POST", f"/games/{game}/moves", token, {"from": start, "to": target})
+        actual, _, state = request("POST", f"/games/{game}/moves", token, {"from": start, "to": target})
         self.assertEqual(actual, status, state)
         return state
 
@@ -65,7 +33,7 @@ class Captures(unittest.TestCase):
         game, _, black = fixture([(4, 3, "b"), (3, 2, "w"), (7, 0, "w")], "black")
         self.move(game, black, [4, 3], [2, 1])
 
-    @unittest.skipUnless(os.environ.get("CHECKERS_DISRUPTIVE") == "1", "restarts API; set CHECKERS_DISRUPTIVE=1 on a demo stack")
+    @DISRUPTIVE
     def test_chain_survives_api_restart(self):
         game, white, black = fixture([(5, 0, "w"), (7, 6, "w"), (4, 1, "b"), (2, 3, "b"), (0, 7, "b")])
         state = self.move(game, white, [5, 0], [3, 2])
@@ -76,9 +44,9 @@ class Captures(unittest.TestCase):
         self.move(game, white, [3, 2], [2, 1], 422)
         self.move(game, black, [0, 7], [1, 6], 409)
         self.assertEqual(sql(f"SELECT capture_from FROM games WHERE id = '{game}'"), "26")
-        compose("restart", "game-api")
-        compose("up", "-d", "--wait", "--wait-timeout", "60", "game-api")
-        state = request("GET", f"/games/{game}")[1]
+        compose("restart", "game-api", timeout=60)
+        wait_for(lambda: healthy("game-api"), seconds=60)
+        state = request("GET", f"/games/{game}")[2]
         self.assertEqual(state["capture_from"], [3, 2])
         self.move(game, white, [3, 2], [5, 0], 422)
         state = self.move(game, white, [3, 2], [1, 4])
@@ -110,16 +78,8 @@ class Captures(unittest.TestCase):
         self.assertEqual(state["legal_moves"], [])
         self.move(game, black, [1, 2], [2, 3], 409)
         self.assertEqual(sql(f"SELECT promoted FROM moves WHERE game_id = '{game}' ORDER BY move_no LIMIT 1"), "t")
-        deadline = time.monotonic() + 15
-        while time.monotonic() < deadline:
-            records = [json.loads(line) for line in compose("logs", "--no-log-prefix", "event-worker").splitlines() if game in line]
-            finished = [record for record in records if record.get("event_type") == "game.finished"]
-            if finished:
-                self.assertEqual(json.loads(finished[0]["payload"])["data"]["winner"], "white")
-                break
-            time.sleep(0.5)
-        else:
-            self.fail("worker did not process automatic game.finished")
+        finished = wait_for(lambda: worker_events(game, "game.finished"))
+        self.assertEqual(json.loads(finished[0]["payload"])["data"]["winner"], "white")
 
     def test_quiet_promotion_and_distant_king_move(self):
         game, _, black = fixture([(6, 1, "b"), (4, 7, "w")], "black")
@@ -139,7 +99,7 @@ class Captures(unittest.TestCase):
     def test_resign_during_chain_clears_captured_pieces(self):
         game, white, _ = fixture([(5, 0, "w"), (4, 1, "b"), (2, 3, "b")])
         self.move(game, white, [5, 0], [3, 2])
-        status, state = request("POST", f"/games/{game}/finish", white)
+        status, _, state = request("POST", f"/games/{game}/finish", white)
         self.assertEqual(status, 200)
         self.assertEqual(state["winner"], "black")
         self.assertEqual(state["board"][4][1], ".")
@@ -163,15 +123,12 @@ class Captures(unittest.TestCase):
 
     def test_old_cache_format_is_not_served(self):
         game, _, _ = fixture([(5, 2, "w"), (0, 1, "b")])
-        deadline = time.monotonic() + 15
-        while sql(f"SELECT count(*) FROM outbox_events WHERE game_id = '{game}'") != "0":
-            self.assertLess(time.monotonic(), deadline)
-            time.sleep(0.2)
-        _, state = request("GET", f"/games/{game}")
+        wait_for(lambda: outbox_empty(game))
+        _, _, state = request("GET", f"/games/{game}")
         state.pop("rules_version")
         state.pop("legal_moves")
-        compose("exec", "-T", "redis", "redis-cli", "SET", f"game:{game}", json.dumps(state), "EX", "60")
-        _, state = request("GET", f"/games/{game}")
+        redis("SET", f"game:{game}", json.dumps(state), "EX", "60")
+        _, _, state = request("GET", f"/games/{game}")
         self.assertEqual(state["rules_version"], 2)
         self.assertTrue(state["legal_moves"])
 
