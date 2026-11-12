@@ -28,12 +28,15 @@ Configure and build from the repository root:
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build --parallel 2
+ctest --test-dir build --output-on-failure --no-tests=error
 ```
 
-Use `-DBUILD_TESTING=OFF` to skip GoogleTest. Project unit tests will be added
-alongside game logic; startup checks use `python3 -B tests/integration/test_startup.py`.
-Future GoogleTest directories should include `GoogleTest` before calling
-`gtest_discover_tests()`.
+GoogleTest is enabled by default; use `-DBUILD_TESTING=OFF` to skip it.
+`tests/game-api/` checks game rules, schema loading, route registration, and
+the publisher's behavior when the database fails through public interfaces.
+`tests/CMakeLists.txt` registers these checks with CTest. They run without a
+Compose stack; Python checks against running services are documented in
+`tests/integration/README.md`.
 
 The first configuration needs network access. For offline builds, prepopulate
 sources and pass standard FetchContent overrides, for example
