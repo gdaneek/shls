@@ -6,12 +6,12 @@ digraph ReadFlow {
   lookup [label="API: запрос в Redis"];
   hit [label="HIT: возврат кеша", fillcolor="#f1f7e8"];
   miss [label="MISS: API читает PostgreSQL", fillcolor="#f1f7e8"];
-  fill [label="API заполняет Redis с TTL", fillcolor="#f1f7e8"];
+  fill [label="API пробует заполнить Redis с TTL\nошибка кеша не отменяет ответ БД", fillcolor="#f1f7e8"];
   bypass [label="BYPASS: API читает PostgreSQL\nбез доступного Redis", fillcolor="#f1f7e8"];
   response [label="HTTP ответ клиенту", fillcolor="#ffffff"];
   request -> lookup;
-  lookup -> hit [label="ключ найден"];
-  lookup -> miss [label="ключ отсутствует"];
+  lookup -> hit [label="ключ найден, rules_version = 2"];
+  lookup -> miss [label="нет ключа или старый формат"];
   lookup -> bypass [label="Redis недоступен"];
   miss -> fill -> response;
   hit -> response;
