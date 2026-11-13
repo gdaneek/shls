@@ -2,7 +2,7 @@ project = "Mini Checkers"
 author = "Mini Checkers"
 language = "ru"
 
-extensions = ["myst_parser", "sphinx.ext.graphviz"]
+extensions = ["myst_parser", "sphinx.ext.graphviz", "sphinx.ext.githubpages"]
 source_suffix = {".md": "markdown"}
 root_doc = "index"
 exclude_patterns = ["_build", "user/**", "operations/**", "development/testing.md", "development/documentation.md"]
