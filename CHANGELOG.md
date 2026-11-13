@@ -67,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replaced the verification chapter with service-level objectives and observability; focused reliability documentation on system behavior.
 - Condensed the Sphinx guide to eight pages covering architecture, operation, and verification.
 - Reconciled tracked documentation with the current test layout, operational commands, and verification results.
 - Added short Russian descriptions to the Python test modules and shared helpers.

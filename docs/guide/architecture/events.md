@@ -21,11 +21,8 @@ Confirm подтверждает приём брокером, а не обраб
 
 Типы: `game.created`, `player.joined`, `move.made`, `game.finished`.
 JSON содержит `event_id`, `game_id`, `type`, `request_id`, `occurred_at`, `data`.
-Worker записывает тип, ID, payload и признак повторной доставки в лог:
-
-```bash
-docker compose logs --no-log-prefix event-worker
-```
+Worker записывает тип, ID, payload и признак повторной доставки в stdout.
+Связь журналов и показателей описана в [наблюдаемости](service-levels.md).
 
 `game.events.quorum` — долговечная очередь с тремя репликами, работающая при
 большинстве **2/3**. Клиенты перебирают адреса `rabbitmq`, `rabbitmq-2`,

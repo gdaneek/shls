@@ -35,8 +35,8 @@ digraph MiniCheckers {
 
   browser -> frontend [label="127.0.0.1:8000"];
   frontend -> api [label="/api/*"];
-  api -> pg [label="SQL :5432"];
-  api -> pg2 [label="SQL :5432"];
+  api -> pg [label="SQL :5432\nесли выбран primary"];
+  api -> pg2 [label="SQL :5432\nесли выбран primary"];
   pg -> pg2 [dir=both, style=dashed, label="async WAL\nроль меняется"];
   api -> redis [dir=both, label="cache-aside :6379"];
   api -> mq1 [label="AMQP :5672\npublish + confirm"];

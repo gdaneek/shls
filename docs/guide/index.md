@@ -3,7 +3,7 @@
 
 ```{toctree}
 :maxdepth: 2
-:caption: Устройство и проверка проекта
+:caption: Архитектура проекта
 
 architecture/overview
 development/api
@@ -11,5 +11,5 @@ architecture/storage
 architecture/events
 architecture/security
 architecture/reliability
-development/verification
+architecture/service-levels
 ```
