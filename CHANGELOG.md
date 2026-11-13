@@ -38,10 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Network segments and firewall description in the README.
 - Service restart policies, API liveness/readiness, Worker heartbeat healthcheck, and PostgreSQL outbox for event delivery after recovery.
 - PostgreSQL dump/restore scripts, seven-day retention, and a daily systemd user backup timer.
-- Failure-recovery checks with measured restart times, and backup restore/retention/safety checks.
+- Failure-recovery checks with recovery-time assertions, and backup restore/retention/safety checks.
 - Reliability targets and backup operation instructions in the README.
 - SLI/SLO acceptance checks for correct reads, p95 latency, and timely event processing.
-- Documented SLI/SLO acceptance objectives and firewall-enabled verification.
+- Documented SLI/SLO objectives and their measurement boundaries.
 - Browser game interface with an interactive board, tab-local player credentials, spectator mode, and manual refresh.
 - Unprivileged frontend container with a same-origin API proxy, a private backend port, and explicit frontend firewall rules.
 - Frontend HTTP and Firefox browser checks, including two-player moves and tab isolation.
@@ -69,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the verification chapter with service-level objectives and observability; focused reliability documentation on system behavior.
 - Condensed the Sphinx guide to eight pages covering architecture, operation, and verification.
-- Reconciled tracked documentation with the current test layout, operational commands, and verification results.
+- Reconciled documentation with the current test layout and operational commands.
 - Added short Russian descriptions to the Python test modules and shared helpers.
 - Replaced shell test scenarios with Python unittest and shared fixtures, preserving failure and recovery checks.
 - Moved integration checks to `tests/integration` and operational commands to `infra`.

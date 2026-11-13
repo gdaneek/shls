@@ -5,8 +5,6 @@
 второй копии. Стартовая страница сборки — `build/docs/html/index.html`.
 Сайт состоит из восьми страниц: запуск (README), архитектура, API, данные и
 кеш, события, firewall, надёжность и уровень обслуживания с наблюдаемостью.
-Для сборки достаточно
-отслеживаемых исходников документации.
 Сайт собирается Sphinx с темой Read the Docs.
 При push тега или публикации релиза GitHub Actions собирает HTML и сохраняет
 его как artifact `documentation`.
@@ -26,8 +24,7 @@ docker run --rm --network none --user "$(id -u):$(id -g)" \
 ```
 
 Для создания образа нужен доступ к Docker Registry и PyPI; сама сборка HTML
-работает без сети. Откройте `build/docs/html/index.html` в браузере. Если в
-каталоге результата уже лежат важные файлы, выберите другой каталог вывода.
+работает без сети. Откройте `build/docs/html/index.html` в браузере.
 
 ## Сборка через Python
 
@@ -39,9 +36,9 @@ build/docs-venv/bin/python -m pip install -r docs/guide/requirements.txt
 build/docs-venv/bin/sphinx-build -b html -n -W --keep-going -E -a docs/guide build/docs/html
 ```
 
-Не создавайте окружение поверх уже существующего без проверки. Исходники схем
-лежат в `docs/guide/_static/*.dot`; Sphinx строит SVG при сборке и сохраняет
+Если окружение `build/docs-venv` уже создано, пропустите команду `venv`.
+Исходники схем лежат в `docs/guide/_static/*.dot`; Sphinx строит SVG при сборке и сохраняет
 их в `build/docs/html/`. Docker-образ включает Graphviz.
 
-Исходники сайта отслеживаются git; результат сборки находится в игнорируемом
-`build/`. Дополнительные локальные заметки не включаются в оглавление сайта.
+Состав сайта задают `docs/guide/index.md` и исключения в `docs/guide/conf.py`.
+Результат сборки находится в игнорируемом Git каталоге `build/`.

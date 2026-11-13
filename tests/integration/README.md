@@ -29,8 +29,7 @@ CHECKERS_DISRUPTIVE=1 python3 -B tests/integration/test_firewall_failure.py -v
 CHECKERS_DISRUPTIVE=1 python3 -B tests/integration/test_captures.py Captures.test_chain_survives_api_restart -v
 ```
 
-Это полноценные Python-тесты, прежних тестовых `.sh` и обёрток больше нет.
-Они останавливают сервисы, меняют роли PostgreSQL и `.env`, создают бэкапы.
+Отказные тесты останавливают сервисы, меняют роли PostgreSQL и `.env`, создают бэкапы.
 После прерванного PostgreSQL failover сначала проверьте роли и выполните
 rejoin; старый primary нельзя запускать вслепую. Firewall требует sudo/nft.
 Контекстные менеджеры `stopped`/`crashed` запускают остановленные ими
@@ -46,39 +45,35 @@ firewall-тест удаляет свою временную таблицу. П�
 Браузерный сценарий (Firefox и geckodriver):
 
 ```bash
-python3 -B tests/integration/test_ui.py --docker-bridge
+python3 -B tests/integration/test_ui.py
 ```
 
 Браузерный сценарий запускается отдельно и не выполняется через `unittest discover`.
-`--http-only` выполняет только HTTP-проверки. Docker-мост проверяет реальные
-frontend/API, но не опубликованный порт хоста. Скриншоты — `build/test-artifacts/`.
+По умолчанию он обращается к `http://127.0.0.1:8000`; другой адрес задаётся
+переменной `FRONTEND_URL`. `--http-only` выполняет только HTTP-проверки.
+Скриншоты сохраняются в `build/test-artifacts/`.
+
+Дополнительный режим `--docker-bridge` направляет запросы через тестовый
+прокси и `docker compose exec` во frontend. Он проверяет frontend/API,
+но не доступность опубликованного порта хоста.
 
 Команды обслуживания находятся в `infra/backups/`, `infra/postgres/` и
-`infra/rabbitmq/`. После обновления существующей установки переустановите
-таймер командой `infra/backups/backup-timer.sh install`: путь backup изменился.
+`infra/rabbitmq/`.
 
-## Соответствие прежним shell-проверкам
+## Сценарии
 
-| Прежняя команда | Python-тест |
+| Файл | Что проверяет |
 |---|---|
-| `test-startup.sh` | `test_startup.py`: health, hello, БД/кеш/quorum, опубликованные порты |
-| `test-integration.sh` | `test_flows.py`: запись/чтение, cache-aside, авторизация, гонка и события; остановки worker/Redis — `test_failure.py` |
-| `test-schema.sh` | `test_schema.py`: пустая БД, повторное применение, upgrade старой схемы |
-| `test-network.sh` | `test_network.py`: все прежние TCP-пары, DROP-счётчик, `FIREWALL=off` |
-| `test-backup.sh` | `test_backup.py`: данные, права, запрет перезаписи и ротация |
-| `test-slo.sh` | `test_slo.py`: 100 чтений, p95, пять событий за ≤15 с |
-| `test-failure.sh` | `test_failure.py`: авторестарт, деградация, persistent-событие, quorum loss, полный outage + outbox |
-| `test-firewall-failure.sh` | `test_firewall_failure.py`: ошибка SQL-связи и откат без изменения основной политики |
-| `test-postgres-failover.sh` | `test_postgres_failover.py`: SIGKILL, promotion, чтение/запись, кеш, rejoin и backup |
-| `test-rabbitmq-failover.sh` | `test_rabbitmq_failover.py`: отказ лидера, backlog, reconnect consumer, проверка неизменности клиентов и догоняния реплик |
-
-`test_captures.py` сохраняет все десять игровых кейсов, `test_ui.py` — HTTP,
-две вкладки, polling, spectator, взятия/дамки и восстановление после reload.
-`test_harness.py` проверяет аварийный cleanup на моках без остановки стенда.
-
-## Последняя проверка переноса
-
-13.11.2026: общий прогон — **25 PASS, 11 SKIP** (36 тестов), полный Firefox
-через Docker-мост — PASS. Пропущены десять отказных проверок и запрос через
-порт хоста. Новые Python-сценарии отказов и режим `FIREWALL=off` в этом прогоне
-не проверялись; прежние результаты shell-сценариев их не подтверждают.
+| `test_startup.py` | Health, hello, БД/кеш/quorum, опубликованные порты |
+| `test_flows.py` | Запись/чтение, cache-aside, авторизация, конкурентные ходы и события |
+| `test_schema.py` | Пустая БД, повторное применение и обновление старой схемы |
+| `test_network.py` | Разрешённые/запрещённые TCP-связи, изоляция сегментов, DROP-счётчик |
+| `test_backup.py` | Восстановленные данные, права архива, запрет перезаписи и ротация |
+| `test_slo.py` | 100 чтений, p95, пять событий за ≤15 с |
+| `test_failure.py` | Авторестарт, деградация, сохранность событий, потеря quorum, полный отказ брокера и outbox |
+| `test_firewall_failure.py` | Ошибка SQL-связи и откат без изменения основной политики |
+| `test_postgres_failover.py` | SIGKILL, promotion, чтение/запись, кеш, rejoin и backup |
+| `test_rabbitmq_failover.py` | Отказ лидера, backlog, reconnect consumer, непрерывная работа клиентов и догоняние реплик |
+| `test_captures.py` | Взятия, цепочки, дамки, победа и сохранность продолжения боя |
+| `test_ui.py` | HTTP, две вкладки, polling, зритель, взятия/дамки и восстановление после reload |
+| `test_harness.py` | Аварийный cleanup на моках без остановки стенда |
