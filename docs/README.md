@@ -7,7 +7,7 @@
 кеш, события, firewall, надёжность и уровень обслуживания с наблюдаемостью.
 Для сборки достаточно отслеживаемых исходников документации.
 Сайт собирается Sphinx с темой Read the Docs.
-При push тега workflow `Docs` собирает HTML, сохраняет artifact `documentation`
+При push тега или ручном запуске workflow `Docs` собирает HTML, сохраняет artifact `documentation`
 и публикует сайт в ветку `gh-pages`. GitHub Pages размещает содержимое корня
 этой ветки. Создание релиза отдельно workflow не запускает.
 
@@ -61,10 +61,19 @@ git push origin v0.1.0
 но версии по SemVer не сравниваются: повторный запуск старого тега может
 заменить сайт старой версией.
 
+### Ручная публикация
+
+Откройте **Actions → Docs → Run workflow**, выберите ветку с нужной версией
+документации и нажмите **Run workflow**. Выполняются та же сборка и публикация
+в `gh-pages`, что и при push тега; deploy key также обязателен.
+Чтобы кнопка появилась, файл workflow с `workflow_dispatch` должен находиться
+в default branch репозитория. В выбранной ветке также должна быть версия
+workflow с этим триггером. Ветку результата `gh-pages` для запуска не выбирайте.
+
 Путь публикации:
 
 ```text
-push тега → Docs → Sphinx → gh-pages → Pages build and deployment → сайт
+push тега / Run workflow → Docs → Sphinx → gh-pages → Pages build and deployment → сайт
 ```
 
 `sphinx.ext.githubpages` создаёт `.nojekyll`: Jekyll не обрабатывает готовый

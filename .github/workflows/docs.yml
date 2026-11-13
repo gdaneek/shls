@@ -3,6 +3,7 @@ name: Docs
 on:
   push:
     tags: ['**']
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -13,7 +14,7 @@ concurrency:
 
 jobs:
   build:
-    if: github.event.deleted == false
+    if: github.event_name == 'workflow_dispatch' || github.event.deleted == false
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
