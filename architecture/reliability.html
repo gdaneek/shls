@@ -1,0 +1,225 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Надёжность и резервные копии &mdash; Mini Checkers — документация</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/collapsible-lists/css/tree_view.css?v=a885cde7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f5f217e7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=372fde1a"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/translations.js?v=cd1d70c9"></script>
+      <script src="../_static/collapsible-lists/js/CollapsibleLists.compressed.js?v=73120307"></script>
+      <script src="../_static/collapsible-lists/js/apply-collapsible-lists.js?v=660e4f45"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../genindex.html" />
+    <link rel="search" title="Поиск" href="../search.html" />
+    <link rel="next" title="Уровень обслуживания и наблюдаемость" href="service-levels.html" />
+    <link rel="prev" title="Сегментация и firewall" href="security.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mini Checkers
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Архитектура проекта</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Архитектура и компоненты</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/api.html">Игра и HTTP API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage.html">PostgreSQL и кеш</a></li>
+<li class="toctree-l1"><a class="reference internal" href="events.html">События, outbox и worker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Сегментация и firewall</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Надёжность и резервные копии</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Изоляция отказов</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#postgresql-primary-standby">PostgreSQL: primary и standby</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rabbitmq-quorum">RabbitMQ: quorum и переподключение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Политика резервного копирования</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="service-levels.html">Уровень обслуживания и наблюдаемость</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/library_root.html">Документация API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Mini Checkers</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Надёжность и резервные копии</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/architecture/reliability.md.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="id1">
+<h1>Надёжность и резервные копии<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h1>
+<section id="id2">
+<h2>Изоляция отказов<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Компонент</p></th>
+<th class="head"><p>Поведение при отказе</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Frontend / API</p></td>
+<td><p>По одному экземпляру; restart policy возвращает завершившийся процесс, но на время восстановления вход или API недоступны.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Worker</p></td>
+<td><p>Перезапускается и переподключается; события ждут в очереди. Игровая запись не зависит от его доступности.</p></td>
+</tr>
+<tr class="row-even"><td><p>Redis</p></td>
+<td><p>API читает PostgreSQL; кеш заполняется заново. Потеря кеша увеличивает нагрузку на БД.</p></td>
+</tr>
+<tr class="row-odd"><td><p>PostgreSQL</p></td>
+<td><p>Том сохраняет данные после рестарта; асинхронный standby позволяет выполнить ручное переключение.</p></td>
+</tr>
+<tr class="row-even"><td><p>RabbitMQ</p></td>
+<td><p>Quorum 2/3 сохраняет работу при отказе одного узла; без большинства публикация ждёт в outbox.</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">restart:</span> <span class="pre">unless-stopped</span></code> реагирует на завершение процесса. Статус <code class="docutils literal notranslate"><span class="pre">unhealthy</span></code>
+сам по себе не перезапускает контейнер. Readiness API требует PostgreSQL/outbox,
+но допускает отказ Redis и RabbitMQ. Холодный запуск Compose ждёт
+healthy-зависимостей; деградированный режим относится к уже запущенному API.</p>
+</section>
+<section id="postgresql-primary-standby">
+<h2>PostgreSQL: primary и standby<a class="headerlink" href="#postgresql-primary-standby" title="Ссылка на этот заголовок"></a></h2>
+<p>Primary принимает запись, standby получает WAL по асинхронной потоковой
+репликации. У узлов отдельные тома; их имена не определяют текущие роли.
+При потере primary запись останавливается до его восстановления или promotion.</p>
+<p>Переключение состоит из четырёх действий:</p>
+<ol class="arabic simple">
+<li><p>Старый primary остановлен и ограждён от повторного запуска: два writable-узла
+не должны одновременно принимать изменения.</p></li>
+<li><p>Standby повышается до primary. Адрес сохраняется в <code class="docutils literal notranslate"><span class="pre">.env</span></code>, API пересоздаётся
+с новым подключением.</p></li>
+<li><p>Ключи <code class="docutils literal notranslate"><span class="pre">game:*</span></code> в Redis удаляются: кеш мог содержать версии, не дошедшие до standby.</p></li>
+<li><p>Старый узел архивируется, приводится к истории нового primary через <code class="docutils literal notranslate"><span class="pre">pg_rewind</span></code>
+и возвращается как standby.</p></li>
+</ol>
+<p>Эту последовательность реализуют <code class="docutils literal notranslate"><span class="pre">promote-postgres.sh</span></code> и <code class="docutils literal notranslate"><span class="pre">rejoin-postgres.sh</span></code>
+в <code class="docutils literal notranslate"><span class="pre">infra/postgres/</span></code>. Promotion ручной, с простоем API. Последние непереданные
+транзакции могут потеряться; автоматического failover и синхронного RPO=0 нет.</p>
+</section>
+<section id="rabbitmq-quorum">
+<h2>RabbitMQ: quorum и переподключение<a class="headerlink" href="#rabbitmq-quorum" title="Ссылка на этот заголовок"></a></h2>
+<p>У очереди <code class="docutils literal notranslate"><span class="pre">game.events.quorum</span></code> три реплики. При отказе лидера оставшиеся два
+узла выбирают нового и продолжают обработку подтверждённых сообщений.
+Узел клиентского подключения и лидер очереди могут быть разными: при разрыве
+API/worker перебирают три адреса, независимо от выбора лидера.</p>
+<p>После возврата узел догоняет реплики. При потере двух узлов большинство
+недоступно: брокер не подтверждает новые сообщения, API сохраняет события
+в outbox. После восстановления publisher продолжает доставку. Повторная
+доставка допустима; подробности — в <a class="reference internal" href="events.html"><span class="std std-doc">модели событий</span></a>.</p>
+</section>
+<section id="id3">
+<h2>Политика резервного копирования<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Свойство</p></th>
+<th class="head"><p>Реализация</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Формат</p></td>
+<td><p>Полный логический <code class="docutils literal notranslate"><span class="pre">pg_dump</span> <span class="pre">-Fc</span></code> текущего writable-узла.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Расписание</p></td>
+<td><p>Ежедневно в 02:00 по локальному времени, после установки пользовательского systemd timer. Нужен работающий user manager; <code class="docutils literal notranslate"><span class="pre">Persistent=true</span></code> догоняет пропуски.</p></td>
+</tr>
+<tr class="row-even"><td><p>Хранение</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">backups/</span></code> на хосте, вне основного тома БД; каталог 700, архив 600.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Ротация</p></td>
+<td><p>Удаление архивов старше 7 дней только после успешного нового dump.</p></td>
+</tr>
+<tr class="row-even"><td><p>Проверка формата</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pg_restore</span> <span class="pre">--list</span></code> перед публикацией готового архива.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Restore</p></td>
+<td><p>Новая БД, одна транзакция, остановка при ошибке; существующая БД не перезаписывается.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Реализация находится в <code class="docutils literal notranslate"><span class="pre">infra/backups/</span></code>; путь и срок хранения задаются
+<code class="docutils literal notranslate"><span class="pre">BACKUP_DIR</span></code> и <code class="docutils literal notranslate"><span class="pre">BACKUP_RETENTION_DAYS</span></code>. Наличие читаемого архива подтверждает
+его структуру, но восстановимость данных определяется успешным restore.
+Физический архив PGDATA перед rejoin — отдельная копия без автоматической ротации.</p>
+<p>Цели времени восстановления и допустимой потери данных описаны в
+<a class="reference internal" href="service-levels.html"><span class="std std-doc">параметрах обслуживания</span></a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="security.html" class="btn btn-neutral float-left" title="Сегментация и firewall" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="service-levels.html" class="btn btn-neutral float-right" title="Уровень обслуживания и наблюдаемость" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права . </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,170 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Program Listing for File game_api.h &mdash; Mini Checkers — документация</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/collapsible-lists/css/tree_view.css?v=a885cde7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f5f217e7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=372fde1a"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/translations.js?v=cd1d70c9"></script>
+      <script src="../_static/collapsible-lists/js/CollapsibleLists.compressed.js?v=73120307"></script>
+      <script src="../_static/collapsible-lists/js/apply-collapsible-lists.js?v=660e4f45"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../genindex.html" />
+    <link rel="search" title="Поиск" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mini Checkers
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Архитектура проекта</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/overview.html">Архитектура и компоненты</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/api.html">Игра и HTTP API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/storage.html">PostgreSQL и кеш</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/events.html">События, outbox и worker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/security.html">Сегментация и firewall</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/reliability.html">Надёжность и резервные копии</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/service-levels.html">Уровень обслуживания и наблюдаемость</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library_root.html">Документация API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Mini Checkers</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Program Listing for File game_api.h</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/program_listing_file_shls_game_api.h.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="program-listing-for-file-game-api-h">
+<span id="program-listing-file-shls-game-api-h"></span><h1>Program Listing for File game_api.h<a class="headerlink" href="#program-listing-for-file-game-api-h" title="Ссылка на этот заголовок"></a></h1>
+<p>↰ <a class="reference internal" href="file_shls_game_api.h.html#file-shls-game-api-h"><span class="std std-ref">Return to documentation for file</span></a> (<code class="docutils literal notranslate"><span class="pre">shls/game_api.h</span></code>)</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma once</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;drogon/HttpRequest.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;drogon/HttpResponse.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;drogon/nosql/RedisClient.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;drogon/orm/DbClient.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;drogon/utils/coroutine.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;json/value.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;optional&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">"shls/game_rules.h"</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">mini_checkers</span><span class="w"> </span><span class="p">{</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">GameApi</span><span class="w"> </span><span class="p">{</span>
+<span class="w"> </span><span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="n">GameApi</span><span class="p">(</span><span class="n">drogon</span><span class="o">::</span><span class="n">orm</span><span class="o">::</span><span class="n">DbClientPtr</span><span class="w"> </span><span class="n">db</span><span class="p">,</span><span class="w"> </span><span class="n">drogon</span><span class="o">::</span><span class="n">nosql</span><span class="o">::</span><span class="n">RedisClientPtr</span><span class="w"> </span><span class="n">redis</span><span class="p">,</span>
+<span class="w">          </span><span class="kt">int</span><span class="w"> </span><span class="n">cache_ttl_seconds</span><span class="p">);</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="nf">CreateSchema</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">path</span><span class="p">);</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="nf">RegisterRoutes</span><span class="p">();</span>
+
+<span class="w"> </span><span class="k">private</span><span class="o">:</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">Response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">drogon</span><span class="o">::</span><span class="n">HttpResponsePtr</span><span class="p">;</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">Request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">drogon</span><span class="o">::</span><span class="n">HttpRequestPtr</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">drogon</span><span class="o">::</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Response</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CreateGame</span><span class="p">(</span><span class="n">Request</span><span class="w"> </span><span class="n">request</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">drogon</span><span class="o">::</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Response</span><span class="o">&gt;</span><span class="w"> </span><span class="n">JoinGame</span><span class="p">(</span><span class="n">Request</span><span class="w"> </span><span class="n">request</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">game_id</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">drogon</span><span class="o">::</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Response</span><span class="o">&gt;</span><span class="w"> </span><span class="n">GetGame</span><span class="p">(</span><span class="n">Request</span><span class="w"> </span><span class="n">request</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">game_id</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">drogon</span><span class="o">::</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Response</span><span class="o">&gt;</span><span class="w"> </span><span class="n">MakeMove</span><span class="p">(</span><span class="n">Request</span><span class="w"> </span><span class="n">request</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">game_id</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">drogon</span><span class="o">::</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Response</span><span class="o">&gt;</span><span class="w"> </span><span class="n">FinishGame</span><span class="p">(</span><span class="n">Request</span><span class="w"> </span><span class="n">request</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">game_id</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">drogon</span><span class="o">::</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">Side</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">FindPlayer</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">game_id</span><span class="p">,</span>
+<span class="w">                                               </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">token</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">drogon</span><span class="o">::</span><span class="n">Task</span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">InvalidateCache</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">game_id</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">drogon</span><span class="o">::</span><span class="n">orm</span><span class="o">::</span><span class="n">DbClientPtr</span><span class="w"> </span><span class="n">db_</span><span class="p">;</span>
+<span class="w">  </span><span class="n">drogon</span><span class="o">::</span><span class="n">nosql</span><span class="o">::</span><span class="n">RedisClientPtr</span><span class="w"> </span><span class="n">redis_</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">cache_ttl_seconds_</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="p">}</span><span class="w">  </span><span class="c1">// namespace mini_checkers</span>
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права . </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

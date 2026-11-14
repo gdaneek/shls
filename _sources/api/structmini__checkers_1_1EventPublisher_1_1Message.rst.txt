@@ -1,0 +1,22 @@
+.. _exhale_struct_structmini__checkers_1_1EventPublisher_1_1Message:
+
+Struct EventPublisher::Message
+==============================
+
+- Defined in :ref:`file_shls_event_publisher.h`
+
+
+Nested Relationships
+--------------------
+
+This struct is a nested type of :ref:`exhale_class_classmini__checkers_1_1EventPublisher`.
+
+
+Struct Documentation
+--------------------
+
+
+.. doxygenstruct:: mini_checkers::EventPublisher::Message
+   :project: Mini Checkers
+   :members:
+   :private-members:

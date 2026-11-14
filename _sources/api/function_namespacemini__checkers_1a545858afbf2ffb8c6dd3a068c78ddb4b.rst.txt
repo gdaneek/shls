@@ -1,0 +1,14 @@
+.. _exhale_function_namespacemini__checkers_1a545858afbf2ffb8c6dd3a068c78ddb4b:
+
+Function mini_checkers::InitialBoard
+====================================
+
+- Defined in :ref:`file_shls_game_rules.h`
+
+
+Function Documentation
+----------------------
+
+
+.. doxygenfunction:: mini_checkers::InitialBoard()
+   :project: Mini Checkers

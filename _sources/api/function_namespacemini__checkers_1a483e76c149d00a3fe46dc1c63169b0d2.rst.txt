@@ -1,0 +1,14 @@
+.. _exhale_function_namespacemini__checkers_1a483e76c149d00a3fe46dc1c63169b0d2:
+
+Function mini_checkers::CellIndex
+=================================
+
+- Defined in :ref:`file_shls_game_rules.h`
+
+
+Function Documentation
+----------------------
+
+
+.. doxygenfunction:: mini_checkers::CellIndex(Cell)
+   :project: Mini Checkers

@@ -1,0 +1,394 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Class GameApi &mdash; Mini Checkers — документация</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/collapsible-lists/css/tree_view.css?v=a885cde7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f5f217e7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=372fde1a"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/translations.js?v=cd1d70c9"></script>
+      <script src="../_static/collapsible-lists/js/CollapsibleLists.compressed.js?v=73120307"></script>
+      <script src="../_static/collapsible-lists/js/apply-collapsible-lists.js?v=660e4f45"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../genindex.html" />
+    <link rel="search" title="Поиск" href="../search.html" />
+    <link rel="next" title="Enum Side" href="enum_namespacemini__checkers_1a8c3c76c4e2a3c89af2d7b36c8094507a.html" />
+    <link rel="prev" title="Class EventPublisher" href="classmini__checkers_1_1EventPublisher.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mini Checkers
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Архитектура проекта</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture/overview.html">Архитектура и компоненты</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/api.html">Игра и HTTP API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/storage.html">PostgreSQL и кеш</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/events.html">События, outbox и worker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/security.html">Сегментация и firewall</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/reliability.html">Надёжность и резервные копии</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/service-levels.html">Уровень обслуживания и наблюдаемость</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="library_root.html">Документация API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="library_root.html#class-hierarchy">Class Hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="library_root.html#file-hierarchy">File Hierarchy</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="library_root.html#id1">Все сущности</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="library_root.html#namespaces">Namespaces</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="library_root.html#classes-and-structs">Classes and Structs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="library_root.html#enums">Enums</a></li>
+<li class="toctree-l3"><a class="reference internal" href="library_root.html#functions">Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="library_root.html#variables">Variables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Mini Checkers</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="library_root.html">Документация API</a></li>
+      <li class="breadcrumb-item active">Class GameApi</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/classmini__checkers_1_1GameApi.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="class-gameapi">
+<span id="exhale-class-classmini-checkers-1-1gameapi"></span><h1>Class GameApi<a class="headerlink" href="#class-gameapi" title="Ссылка на этот заголовок"></a></h1>
+<ul class="simple">
+<li><p>Defined in <a class="reference internal" href="file_shls_game_api.h.html#file-shls-game-api-h"><span class="std std-ref">File game_api.h</span></a></p></li>
+</ul>
+<section id="class-documentation">
+<h2>Class Documentation<a class="headerlink" href="#class-documentation" title="Ссылка на этот заголовок"></a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApiE">
+<span id="_CPPv3N13mini_checkers7GameApiE"></span><span id="_CPPv2N13mini_checkers7GameApiE"></span><span id="mini_checkers::GameApi"></span><span class="target" id="classmini__checkers_1_1GameApi"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">GameApi</span></span></span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApiE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Обрабатывает игровые запросы, чтение кеша и транзакционную запись событий в outbox. </p>
+<p>PostgreSQL хранит состояние и события одной атомарной операции. После записи обработчик инвалидирует кеш; публикацию в RabbitMQ выполняет <a class="reference internal" href="classmini__checkers_1_1EventPublisher.html#classmini__checkers_1_1EventPublisher"><span class="std std-ref">EventPublisher</span></a> независимо от HTTP-ответа. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Объект должен существовать всё время обслуживания зарегистрированных маршрутов: обработчики Drogon сохраняют указатель this. </p>
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApi7GameApiEN6drogon3orm11DbClientPtrEN6drogon5nosql14RedisClientPtrEi">
+<span id="_CPPv3N13mini_checkers7GameApi7GameApiEN6drogon3orm11DbClientPtrEN6drogon5nosql14RedisClientPtrEi"></span><span id="_CPPv2N13mini_checkers7GameApi7GameApiEN6drogon3orm11DbClientPtrEN6drogon5nosql14RedisClientPtrEi"></span><span id="mini_checkers::GameApi::GameApi__drogon::orm::DbClientPtr.drogon::nosql::RedisClientPtr.i"></span><span class="target" id="classmini__checkers_1_1GameApi_1a61abc3f740d153a2dfe04fdf4765e0d8"></span><span class="sig-name descname"><span class="n"><span class="pre">GameApi</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">orm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">DbClientPtr</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">db</span></span>, <span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nosql</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">RedisClientPtr</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">redis</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">cache_ttl_seconds</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApi7GameApiEN6drogon3orm11DbClientPtrEN6drogon5nosql14RedisClientPtrEi" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Задаёт клиенты хранилищ и время жизни кеша в секундах. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Конструктор не создаёт схему и не регистрирует маршруты. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>db</strong> – <strong>[in]</strong> Ненулевой клиент PostgreSQL для партий и outbox. </p></li>
+<li><p><strong>redis</strong> – <strong>[in]</strong> Клиент Redis; nullptr отключает кеширование. </p></li>
+<li><p><strong>cache_ttl_seconds</strong> – <strong>[in]</strong> Положительное время жизни записи кеша. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApi12CreateSchemaERKNSt6stringE">
+<span id="_CPPv3N13mini_checkers7GameApi12CreateSchemaERKNSt6stringE"></span><span id="_CPPv2N13mini_checkers7GameApi12CreateSchemaERKNSt6stringE"></span><span id="mini_checkers::GameApi::CreateSchema__ssCR"></span><span class="target" id="classmini__checkers_1_1GameApi_1a35752e07b36d0c2c4e690cbd511d48bb"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CreateSchema</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">path</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApi12CreateSchemaERKNSt6stringE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Применяет файл SQL-схемы; передаёт ошибки чтения и БД вызывающему коду. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Выполняет блокирующий запрос; вызывается при запуске до обслуживания HTTP. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> – <strong>[in]</strong> Путь к непустому SQL-файлу; относительный путь считается от рабочего каталога. </p>
+</dd>
+<dt class="field-even">Бросает исключение<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">runtime_error</span></span></span> – Если файл не открывается, не читается или пуст. </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">drogon</span><span class="p">::</span><span class="n">orm</span><span class="p">::</span><span class="n">DrogonDbException</span></span></span> – Если выполнение SQL завершилось ошибкой. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApi14RegisterRoutesEv">
+<span id="_CPPv3N13mini_checkers7GameApi14RegisterRoutesEv"></span><span id="_CPPv2N13mini_checkers7GameApi14RegisterRoutesEv"></span><span id="mini_checkers::GameApi::RegisterRoutes"></span><span class="target" id="classmini__checkers_1_1GameApi_1abeb4c509525824caa2074e185878a8e0"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">RegisterRoutes</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApi14RegisterRoutesEv" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Регистрирует маршруты создания, присоединения, чтения, хода и завершения партии. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Вызывается один раз до запуска приложения Drogon. Внутренние пути начинаются с /games; внешний префикс /api добавляется обратным прокси. </p>
+</div>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-private-types">Private Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApi8ResponseE">
+<span id="_CPPv3N13mini_checkers7GameApi8ResponseE"></span><span id="_CPPv2N13mini_checkers7GameApi8ResponseE"></span><span class="target" id="classmini__checkers_1_1GameApi_1adcf00f352695fad31c5a04af975ab833"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Response</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">HttpResponsePtr</span></span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApi8ResponseE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Указатель с совместным владением на HTTP-ответ обработчика. </p>
+</dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApi7RequestE">
+<span id="_CPPv3N13mini_checkers7GameApi7RequestE"></span><span id="_CPPv2N13mini_checkers7GameApi7RequestE"></span><span class="target" id="classmini__checkers_1_1GameApi_1add7b0d2b49b7acf8b6b939a63a5031e1"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Request</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">HttpRequestPtr</span></span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApi7RequestE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Указатель с совместным владением на входящий HTTP-запрос. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-private-functions">Private Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApi10CreateGameE7Request">
+<span id="_CPPv3N13mini_checkers7GameApi10CreateGameE7Request"></span><span id="_CPPv2N13mini_checkers7GameApi10CreateGameE7Request"></span><span id="mini_checkers::GameApi::CreateGame__Request"></span><span class="target" id="classmini__checkers_1_1GameApi_1aaa0d99ee55856f74eaa81e117c6ac118"></span><span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Task</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N13mini_checkers7GameApi8ResponseE" title="mini_checkers::GameApi::Response"><span class="n"><span class="pre">Response</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CreateGame</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N13mini_checkers7GameApi7RequestE" title="mini_checkers::GameApi::Request"><span class="n"><span class="pre">Request</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">request</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApi10CreateGameE7Request" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Создаёт ожидающую партию и выдаёт токен белых. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Партия, хеш токена и событие game.created записываются атомарно. Исходный токен возвращается клиенту, в БД сохраняется только его хеш. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> – <strong>[in]</strong> HTTP-запрос; X-Request-Id используется для связи с событием. </p>
+</dd>
+<dt class="field-even">Бросает исключение<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">runtime_error</span></span></span> – Если не удалось сгенерировать секретный токен. </p>
+</dd>
+<dt class="field-odd">Результат<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Задача с JSON-ответом: 201 с game_id, side и player_token; 503 при ошибке PostgreSQL. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApi8JoinGameE7RequestNSt6stringE">
+<span id="_CPPv3N13mini_checkers7GameApi8JoinGameE7RequestNSt6stringE"></span><span id="_CPPv2N13mini_checkers7GameApi8JoinGameE7RequestNSt6stringE"></span><span id="mini_checkers::GameApi::JoinGame__Request.ss"></span><span class="target" id="classmini__checkers_1_1GameApi_1adcd6833dd5037a6be082af4de3c1ec1c"></span><span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Task</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N13mini_checkers7GameApi8ResponseE" title="mini_checkers::GameApi::Response"><span class="n"><span class="pre">Response</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">JoinGame</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N13mini_checkers7GameApi7RequestE" title="mini_checkers::GameApi::Request"><span class="n"><span class="pre">Request</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">request</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">game_id</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApi8JoinGameE7RequestNSt6stringE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Присоединяет игрока к ожидающей партии и выдаёт токен чёрных. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Условное обновление статуса позволяет присоединиться только одному сопернику. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> – <strong>[in]</strong> HTTP-запрос с необязательным X-Request-Id. </p></li>
+<li><p><strong>game_id</strong> – <strong>[in]</strong> UUID партии из маршрута; нормализуется к нижнему регистру. </p></li>
+</ul>
+</dd>
+<dt class="field-even">Бросает исключение<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">runtime_error</span></span></span> – Если не удалось сгенерировать секретный токен. </p>
+</dd>
+<dt class="field-odd">Результат<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Задача с JSON-ответом: 200 с реквизитами игрока, 404 для неверного или отсутствующего UUID, 409 для не ожидающей партии, 503 при ошибке БД. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApi7GetGameE7RequestNSt6stringE">
+<span id="_CPPv3N13mini_checkers7GameApi7GetGameE7RequestNSt6stringE"></span><span id="_CPPv2N13mini_checkers7GameApi7GetGameE7RequestNSt6stringE"></span><span id="mini_checkers::GameApi::GetGame__Request.ss"></span><span class="target" id="classmini__checkers_1_1GameApi_1a0433a8056393bbd0694909e74035278a"></span><span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Task</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N13mini_checkers7GameApi8ResponseE" title="mini_checkers::GameApi::Response"><span class="n"><span class="pre">Response</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">GetGame</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N13mini_checkers7GameApi7RequestE" title="mini_checkers::GameApi::Request"><span class="n"><span class="pre">Request</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">request</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">game_id</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApi7GetGameE7RequestNSt6stringE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Читает партию из кеша, обращаясь к PostgreSQL при промахе или ошибке. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Чтение не требует токена. Успешный ответ содержит X-Cache: HIT, MISS или BYPASS. Ошибка Redis не препятствует чтению из PostgreSQL. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> – <strong>[in]</strong> HTTP-запрос; его содержимое этим обработчиком не используется. </p></li>
+<li><p><strong>game_id</strong> – <strong>[in]</strong> UUID партии из маршрута. </p></li>
+</ul>
+</dd>
+<dt class="field-even">Результат<span class="colon">:</span></dt>
+<dd class="field-even"><p>Задача с JSON-ответом: 200 с состоянием партии, 404 для неверного или отсутствующего UUID, 503 при ошибке чтения БД. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApi8MakeMoveE7RequestNSt6stringE">
+<span id="_CPPv3N13mini_checkers7GameApi8MakeMoveE7RequestNSt6stringE"></span><span id="_CPPv2N13mini_checkers7GameApi8MakeMoveE7RequestNSt6stringE"></span><span id="mini_checkers::GameApi::MakeMove__Request.ss"></span><span class="target" id="classmini__checkers_1_1GameApi_1a9a4bf9906f744756072b0c8f2243f241"></span><span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Task</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N13mini_checkers7GameApi8ResponseE" title="mini_checkers::GameApi::Response"><span class="n"><span class="pre">Response</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MakeMove</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N13mini_checkers7GameApi7RequestE" title="mini_checkers::GameApi::Request"><span class="n"><span class="pre">Request</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">request</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">game_id</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApi8MakeMoveE7RequestNSt6stringE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Проверяет права и сохраняет допустимый ход с оптимистической проверкой версии. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Запрос выполняет одно звено боя. Ход, версия партии и события сохраняются атомарно; конкурентное изменение версии даёт 409. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> – <strong>[in]</strong> Запрос с X-Player-Token и JSON-полями from/to — парами [row, col]. </p></li>
+<li><p><strong>game_id</strong> – <strong>[in]</strong> UUID партии из маршрута. </p></li>
+</ul>
+</dd>
+<dt class="field-even">Результат<span class="colon">:</span></dt>
+<dd class="field-even"><p>Задача с JSON-ответом: 200 с новой позицией; 400 при неверном теле, 401/403 при отсутствии или несовпадении токена, 404 для неизвестной партии, 409 при конфликте состояния или очереди, 422 для недопустимого хода, 503 при ошибке БД. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApi10FinishGameE7RequestNSt6stringE">
+<span id="_CPPv3N13mini_checkers7GameApi10FinishGameE7RequestNSt6stringE"></span><span id="_CPPv2N13mini_checkers7GameApi10FinishGameE7RequestNSt6stringE"></span><span id="mini_checkers::GameApi::FinishGame__Request.ss"></span><span class="target" id="classmini__checkers_1_1GameApi_1af2c63d29f910f5c78de349c77c2730de"></span><span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Task</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N13mini_checkers7GameApi8ResponseE" title="mini_checkers::GameApi::Response"><span class="n"><span class="pre">Response</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FinishGame</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N13mini_checkers7GameApi7RequestE" title="mini_checkers::GameApi::Request"><span class="n"><span class="pre">Request</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">request</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">game_id</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApi10FinishGameE7RequestNSt6stringE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Проверяет права на сдачу или закрытие ожидающей партии и сохраняет результат. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>В активной партии победа присуждается сопернику сдавшегося игрока; ожидающая партия закрывается без победителя. Остаток цепочки боя очищается. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> – <strong>[in]</strong> Запрос с X-Player-Token и необязательным X-Request-Id. </p></li>
+<li><p><strong>game_id</strong> – <strong>[in]</strong> UUID партии из маршрута. </p></li>
+</ul>
+</dd>
+<dt class="field-even">Результат<span class="colon">:</span></dt>
+<dd class="field-even"><p>Задача с JSON-ответом: 200 с завершённой партией, 401/403 при ошибке авторизации, 404 для неверного или отсутствующего UUID, 409 при повторном завершении или конфликте версии, 503 при ошибке БД. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApi10FindPlayerERKNSt6stringERKNSt6stringE">
+<span id="_CPPv3N13mini_checkers7GameApi10FindPlayerERKNSt6stringERKNSt6stringE"></span><span id="_CPPv2N13mini_checkers7GameApi10FindPlayerERKNSt6stringERKNSt6stringE"></span><span id="mini_checkers::GameApi::FindPlayer__ssCR.ssCR"></span><span class="target" id="classmini__checkers_1_1GameApi_1a1e8d5858034579b3d16dcdefdf931978"></span><span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Task</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="enum_namespacemini__checkers_1a8c3c76c4e2a3c89af2d7b36c8094507a.html#_CPPv4N13mini_checkers4SideE" title="mini_checkers::Side"><span class="n"><span class="pre">Side</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FindPlayer</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">game_id</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">token</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApi10FindPlayerERKNSt6stringERKNSt6stringE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Определяет сторону игрока по секретному токену; при отсутствии возвращает nullopt. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Сопоставление выполняется по SHA-256 токена, а не по открытому секрету. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>game_id</strong> – <strong>[in]</strong> Проверенный UUID партии. </p></li>
+<li><p><strong>token</strong> – <strong>[in]</strong> Исходный секретный токен из заголовка запроса. </p></li>
+</ul>
+</dd>
+<dt class="field-even">Бросает исключение<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">drogon</span><span class="p">::</span><span class="n">orm</span><span class="p">::</span><span class="n">DrogonDbException</span></span></span> – Если запрос к PostgreSQL не выполнен. </p>
+</dd>
+<dt class="field-odd">Результат<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Задача со стороной игрока либо std::nullopt, если соответствие не найдено. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApi15InvalidateCacheERKNSt6stringE">
+<span id="_CPPv3N13mini_checkers7GameApi15InvalidateCacheERKNSt6stringE"></span><span id="_CPPv2N13mini_checkers7GameApi15InvalidateCacheERKNSt6stringE"></span><span id="mini_checkers::GameApi::InvalidateCache__ssCR"></span><span class="target" id="classmini__checkers_1_1GameApi_1a312b6730cdf21405926db356cb916cb2"></span><span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Task</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">InvalidateCache</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">game_id</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApi15InvalidateCacheERKNSt6stringE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Удаляет партию из кеша, допуская недоступность Redis. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Без клиента Redis сразу завершается. Ошибки удаления журналируются; запись в PostgreSQL не откатывается, старая запись кеша ограничена TTL. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>game_id</strong> – <strong>[in]</strong> Нормализованный UUID партии для ключа game:{id}. </p>
+</dd>
+<dt class="field-even">Результат<span class="colon">:</span></dt>
+<dd class="field-even"><p>Задача без значения, завершённая после попытки удаления. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-private-members">Private Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApi3db_E">
+<span id="_CPPv3N13mini_checkers7GameApi3db_E"></span><span id="_CPPv2N13mini_checkers7GameApi3db_E"></span><span id="mini_checkers::GameApi::db___drogon::orm::DbClientPtr"></span><span class="target" id="classmini__checkers_1_1GameApi_1a73de25371f7dcdac3037ed082acfb4a0"></span><span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">orm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">DbClientPtr</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">db_</span></span></span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApi3db_E" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Основное хранилище партий и событий outbox. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApi6redis_E">
+<span id="_CPPv3N13mini_checkers7GameApi6redis_E"></span><span id="_CPPv2N13mini_checkers7GameApi6redis_E"></span><span id="mini_checkers::GameApi::redis___drogon::nosql::RedisClientPtr"></span><span class="target" id="classmini__checkers_1_1GameApi_1adefde50d7b797edb0cf39cab657c7382"></span><span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nosql</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">RedisClientPtr</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">redis_</span></span></span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApi6redis_E" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Необязательный клиент кеша. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers7GameApi18cache_ttl_seconds_E">
+<span id="_CPPv3N13mini_checkers7GameApi18cache_ttl_seconds_E"></span><span id="_CPPv2N13mini_checkers7GameApi18cache_ttl_seconds_E"></span><span id="mini_checkers::GameApi::cache_ttl_seconds___i"></span><span class="target" id="classmini__checkers_1_1GameApi_1ac06fa11ab93242e46b6d9583f46a2ad1"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cache_ttl_seconds_</span></span></span><a class="headerlink" href="#_CPPv4N13mini_checkers7GameApi18cache_ttl_seconds_E" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Время жизни записи кеша в секундах. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="classmini__checkers_1_1EventPublisher.html" class="btn btn-neutral float-left" title="Class EventPublisher" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="enum_namespacemini__checkers_1a8c3c76c4e2a3c89af2d7b36c8094507a.html" class="btn btn-neutral float-right" title="Enum Side" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права . </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

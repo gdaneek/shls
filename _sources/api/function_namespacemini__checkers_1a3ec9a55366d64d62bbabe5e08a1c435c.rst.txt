@@ -1,0 +1,14 @@
+.. _exhale_function_namespacemini__checkers_1a3ec9a55366d64d62bbabe5e08a1c435c:
+
+Function mini_checkers::ApplyMove
+=================================
+
+- Defined in :ref:`file_shls_game_rules.h`
+
+
+Function Documentation
+----------------------
+
+
+.. doxygenfunction:: mini_checkers::ApplyMove(Position, Cell, Cell)
+   :project: Mini Checkers

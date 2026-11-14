@@ -1,0 +1,14 @@
+.. _exhale_function_namespacemini__checkers_1ad8914498bf80ce4c22a70c0d548c10a3:
+
+Function mini_checkers::ClearCapturedPieces
+===========================================
+
+- Defined in :ref:`file_shls_game_rules.h`
+
+
+Function Documentation
+----------------------
+
+
+.. doxygenfunction:: mini_checkers::ClearCapturedPieces(Position&)
+   :project: Mini Checkers

@@ -1,0 +1,178 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Struct MoveResult &mdash; Mini Checkers — документация</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/collapsible-lists/css/tree_view.css?v=a885cde7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f5f217e7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=372fde1a"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/translations.js?v=cd1d70c9"></script>
+      <script src="../_static/collapsible-lists/js/CollapsibleLists.compressed.js?v=73120307"></script>
+      <script src="../_static/collapsible-lists/js/apply-collapsible-lists.js?v=660e4f45"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../genindex.html" />
+    <link rel="search" title="Поиск" href="../search.html" />
+    <link rel="next" title="Struct Position" href="structmini__checkers_1_1Position.html" />
+    <link rel="prev" title="Struct Move" href="structmini__checkers_1_1Move.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mini Checkers
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Архитектура проекта</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture/overview.html">Архитектура и компоненты</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/api.html">Игра и HTTP API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/storage.html">PostgreSQL и кеш</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/events.html">События, outbox и worker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/security.html">Сегментация и firewall</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/reliability.html">Надёжность и резервные копии</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/service-levels.html">Уровень обслуживания и наблюдаемость</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="library_root.html">Документация API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="library_root.html#class-hierarchy">Class Hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="library_root.html#file-hierarchy">File Hierarchy</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="library_root.html#id1">Все сущности</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="library_root.html#namespaces">Namespaces</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="library_root.html#classes-and-structs">Classes and Structs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="library_root.html#enums">Enums</a></li>
+<li class="toctree-l3"><a class="reference internal" href="library_root.html#functions">Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="library_root.html#variables">Variables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Mini Checkers</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="library_root.html">Документация API</a></li>
+      <li class="breadcrumb-item active">Struct MoveResult</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/structmini__checkers_1_1MoveResult.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="struct-moveresult">
+<span id="exhale-struct-structmini-checkers-1-1moveresult"></span><h1>Struct MoveResult<a class="headerlink" href="#struct-moveresult" title="Ссылка на этот заголовок"></a></h1>
+<ul class="simple">
+<li><p>Defined in <a class="reference internal" href="file_shls_game_rules.h.html#file-shls-game-rules-h"><span class="std std-ref">File game_rules.h</span></a></p></li>
+</ul>
+<section id="struct-documentation">
+<h2>Struct Documentation<a class="headerlink" href="#struct-documentation" title="Ссылка на этот заголовок"></a></h2>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers10MoveResultE">
+<span id="_CPPv3N13mini_checkers10MoveResultE"></span><span id="_CPPv2N13mini_checkers10MoveResultE"></span><span id="mini_checkers::MoveResult"></span><span class="target" id="structmini__checkers_1_1MoveResult"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MoveResult</span></span></span><a class="headerlink" href="#_CPPv4N13mini_checkers10MoveResultE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Обновлённая позиция и результат одного участка хода. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>При продолжении боя position.turn не меняется, а winner остаётся пустым. </p>
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers10MoveResult8positionE">
+<span id="_CPPv3N13mini_checkers10MoveResult8positionE"></span><span id="_CPPv2N13mini_checkers10MoveResult8positionE"></span><span id="mini_checkers::MoveResult::position__Position"></span><span class="target" id="structmini__checkers_1_1MoveResult_1a36e9801288950bffde36990aab7870eb"></span><a class="reference internal" href="structmini__checkers_1_1Position.html#_CPPv4N13mini_checkers8PositionE" title="mini_checkers::Position"><span class="n"><span class="pre">Position</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">position</span></span></span><a class="headerlink" href="#_CPPv4N13mini_checkers10MoveResult8positionE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Позиция после хода. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers10MoveResult13captured_cellE">
+<span id="_CPPv3N13mini_checkers10MoveResult13captured_cellE"></span><span id="_CPPv2N13mini_checkers10MoveResult13captured_cellE"></span><span id="mini_checkers::MoveResult::captured_cell__i"></span><span class="target" id="structmini__checkers_1_1MoveResult_1a8051478a6e2596a540ba3f8aa0d8593f"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">captured_cell</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="o"><span class="pre">-</span></span><span class="m"><span class="pre">1</span></span><a class="headerlink" href="#_CPPv4N13mini_checkers10MoveResult13captured_cellE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Индекс побитой фигуры или -1 для тихого хода. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers10MoveResult8promotedE">
+<span id="_CPPv3N13mini_checkers10MoveResult8promotedE"></span><span id="_CPPv2N13mini_checkers10MoveResult8promotedE"></span><span id="mini_checkers::MoveResult::promoted__b"></span><span class="target" id="structmini__checkers_1_1MoveResult_1a640671b5b57019842f76ed6cb9b6d1e2"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">promoted</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><a class="headerlink" href="#_CPPv4N13mini_checkers10MoveResult8promotedE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Превратилась ли ходящая шашка в дамку. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers10MoveResult6winnerE">
+<span id="_CPPv3N13mini_checkers10MoveResult6winnerE"></span><span id="_CPPv2N13mini_checkers10MoveResult6winnerE"></span><span id="mini_checkers::MoveResult::winner__std::optional:Side:"></span><span class="target" id="structmini__checkers_1_1MoveResult_1a41e3b29b053b99e69d3f95e3bbbb3df6"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="enum_namespacemini__checkers_1a8c3c76c4e2a3c89af2d7b36c8094507a.html#_CPPv4N13mini_checkers4SideE" title="mini_checkers::Side"><span class="n"><span class="pre">Side</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">winner</span></span></span><a class="headerlink" href="#_CPPv4N13mini_checkers10MoveResult6winnerE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Победитель, если у соперника нет допустимых ходов. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="structmini__checkers_1_1Move.html" class="btn btn-neutral float-left" title="Struct Move" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="structmini__checkers_1_1Position.html" class="btn btn-neutral float-right" title="Struct Position" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права . </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

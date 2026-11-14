@@ -1,0 +1,14 @@
+.. _exhale_enum_namespacemini__checkers_1a8c3c76c4e2a3c89af2d7b36c8094507a:
+
+Enum Side
+=========
+
+- Defined in :ref:`file_shls_game_rules.h`
+
+
+Enum Documentation
+------------------
+
+
+.. doxygenenum:: mini_checkers::Side
+   :project: Mini Checkers

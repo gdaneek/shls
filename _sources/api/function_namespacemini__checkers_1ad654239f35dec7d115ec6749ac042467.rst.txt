@@ -1,0 +1,14 @@
+.. _exhale_function_namespacemini__checkers_1ad654239f35dec7d115ec6749ac042467:
+
+Function mini_checkers::Opponent
+================================
+
+- Defined in :ref:`file_shls_game_rules.h`
+
+
+Function Documentation
+----------------------
+
+
+.. doxygenfunction:: mini_checkers::Opponent(Side)
+   :project: Mini Checkers

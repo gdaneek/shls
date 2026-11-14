@@ -1,0 +1,14 @@
+.. _exhale_variable_namespacemini__checkers_1a365321a7e7bbfcacfacad3c570bfafa7:
+
+Variable mini_checkers::kBoardSize
+==================================
+
+- Defined in :ref:`file_shls_game_rules.h`
+
+
+Variable Documentation
+----------------------
+
+
+.. doxygenvariable:: mini_checkers::kBoardSize
+   :project: Mini Checkers

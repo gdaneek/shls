@@ -1,0 +1,16 @@
+.. _exhale_struct_structmini__checkers_1_1Move:
+
+Struct Move
+===========
+
+- Defined in :ref:`file_shls_game_rules.h`
+
+
+Struct Documentation
+--------------------
+
+
+.. doxygenstruct:: mini_checkers::Move
+   :project: Mini Checkers
+   :members:
+   :private-members:

@@ -1,0 +1,80 @@
+
+.. _program_listing_file_shls_game_rules.h:
+
+Program Listing for File game_rules.h
+=====================================
+
+|exhale_lsh| :ref:`Return to documentation for file <file_shls_game_rules.h>` (``shls/game_rules.h``)
+
+.. |exhale_lsh| unicode:: U+021B0 .. UPWARDS ARROW WITH TIP LEFTWARDS
+
+.. code-block:: cpp
+
+   
+   #pragma once
+   
+   #include <optional>
+   #include <string>
+   #include <string_view>
+   #include <vector>
+   
+   namespace mini_checkers {
+   
+   inline constexpr int kBoardSize = 8;
+   inline constexpr char kEmptyCell = '.';
+   inline constexpr char kWhitePiece = 'w';
+   inline constexpr char kBlackPiece = 'b';
+   inline constexpr char kWhiteKing = 'W';
+   inline constexpr char kBlackKing = 'B';
+   
+   enum class Side {
+     kWhite, 
+     kBlack  
+   };
+   
+   struct Cell {
+     int row = 0; 
+     int col = 0; 
+     bool operator==(const Cell& other) const = default;
+   };
+   
+   struct Position {
+     std::string board; 
+     Side turn = Side::kWhite; 
+     int capture_from = -1; 
+     std::vector<int> captured;
+   };
+   
+   struct Move {
+     Cell from; 
+     Cell to; 
+     int captured_cell = -1; 
+   };
+   
+   struct MoveResult {
+     Position position; 
+     int captured_cell = -1; 
+     bool promoted = false; 
+     std::optional<Side> winner; 
+   };
+   
+   std::string_view SideName(Side side);
+   
+   std::optional<Side> ParseSide(std::string_view name);
+   
+   Side Opponent(Side side);
+   
+   int CellIndex(Cell cell);
+   
+   std::string InitialBoard();
+   
+   std::vector<Move> LegalMoves(const Position& position);
+   
+   std::optional<std::string_view> ValidateMove(const Position& position,
+                                              Cell from, Cell to);
+   
+   MoveResult ApplyMove(Position position, Cell from, Cell to);
+   
+   void ClearCapturedPieces(Position& position);
+   
+   }  // namespace mini_checkers

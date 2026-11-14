@@ -1,0 +1,14 @@
+.. _exhale_variable_namespacemini__checkers_1ae01ed2d5dd507cce63737c2a4e24b5fc:
+
+Variable mini_checkers::kEmptyCell
+==================================
+
+- Defined in :ref:`file_shls_game_rules.h`
+
+
+Variable Documentation
+----------------------
+
+
+.. doxygenvariable:: mini_checkers::kEmptyCell
+   :project: Mini Checkers

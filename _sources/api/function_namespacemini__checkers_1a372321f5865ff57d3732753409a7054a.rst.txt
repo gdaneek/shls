@@ -1,0 +1,14 @@
+.. _exhale_function_namespacemini__checkers_1a372321f5865ff57d3732753409a7054a:
+
+Function mini_checkers::SideName
+================================
+
+- Defined in :ref:`file_shls_game_rules.h`
+
+
+Function Documentation
+----------------------
+
+
+.. doxygenfunction:: mini_checkers::SideName(Side)
+   :project: Mini Checkers

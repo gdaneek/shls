@@ -1,0 +1,14 @@
+.. _exhale_function_namespacemini__checkers_1a1e1ec9235453f860c234af4a4270315f:
+
+Function mini_checkers::ParseSide
+=================================
+
+- Defined in :ref:`file_shls_game_rules.h`
+
+
+Function Documentation
+----------------------
+
+
+.. doxygenfunction:: mini_checkers::ParseSide(std::string_view)
+   :project: Mini Checkers

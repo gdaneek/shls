@@ -1,0 +1,222 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Сегментация и firewall &mdash; Mini Checkers — документация</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/collapsible-lists/css/tree_view.css?v=a885cde7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f5f217e7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=372fde1a"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/translations.js?v=cd1d70c9"></script>
+      <script src="../_static/collapsible-lists/js/CollapsibleLists.compressed.js?v=73120307"></script>
+      <script src="../_static/collapsible-lists/js/apply-collapsible-lists.js?v=660e4f45"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../genindex.html" />
+    <link rel="search" title="Поиск" href="../search.html" />
+    <link rel="next" title="Надёжность и резервные копии" href="reliability.html" />
+    <link rel="prev" title="События, outbox и worker" href="events.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mini Checkers
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Архитектура проекта</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Архитектура и компоненты</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/api.html">Игра и HTTP API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage.html">PostgreSQL и кеш</a></li>
+<li class="toctree-l1"><a class="reference internal" href="events.html">События, outbox и worker</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Сегментация и firewall</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Сети и правила</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Границы доверия и потеря связи</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Прикладные ограничения доступа</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reliability.html">Надёжность и резервные копии</a></li>
+<li class="toctree-l1"><a class="reference internal" href="service-levels.html">Уровень обслуживания и наблюдаемость</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/library_root.html">Документация API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Mini Checkers</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Сегментация и firewall</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/architecture/security.md.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="firewall">
+<h1>Сегментация и firewall<a class="headerlink" href="#firewall" title="Ссылка на этот заголовок"></a></h1>
+<section id="id1">
+<h2>Сети и правила<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h2>
+<p>IP-план задан в <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code>, правила — в
+<code class="docutils literal notranslate"><span class="pre">infra/firewall/mini-checkers.nft</span></code> (таблица <code class="docutils literal notranslate"><span class="pre">bridge</span> <span class="pre">mini_checkers</span></code>).</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Сеть / мост</p></th>
+<th class="head"><p>Подсеть</p></th>
+<th class="head"><p>Узлы: последний октет</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">public</span></code> / <code class="docutils literal notranslate"><span class="pre">mc-public</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10.10.1.0/24</span></code></p></td>
+<td><p>API <code class="docutils literal notranslate"><span class="pre">.2</span></code>, frontend <code class="docutils literal notranslate"><span class="pre">.3</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">data</span></code> / <code class="docutils literal notranslate"><span class="pre">mc-data</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10.10.2.0/24</span></code></p></td>
+<td><p>API <code class="docutils literal notranslate"><span class="pre">.2</span></code>, PostgreSQL <code class="docutils literal notranslate"><span class="pre">.3</span></code> и <code class="docutils literal notranslate"><span class="pre">.5</span></code>, Redis <code class="docutils literal notranslate"><span class="pre">.4</span></code>, maintenance <code class="docutils literal notranslate"><span class="pre">.6</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">messaging</span></code> / <code class="docutils literal notranslate"><span class="pre">mc-msg</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10.10.3.0/24</span></code></p></td>
+<td><p>API <code class="docutils literal notranslate"><span class="pre">.2</span></code>, RabbitMQ <code class="docutils literal notranslate"><span class="pre">.3</span></code> / <code class="docutils literal notranslate"><span class="pre">.5</span></code> / <code class="docutils literal notranslate"><span class="pre">.6</span></code>, worker <code class="docutils literal notranslate"><span class="pre">.4</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">data</span></code> и <code class="docutils literal notranslate"><span class="pre">messaging</span></code> — внутренние Docker-сети. На хост опубликован только
+frontend: <code class="docutils literal notranslate"><span class="pre">127.0.0.1:8000</span></code> по умолчанию.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Новое соединение</p></th>
+<th class="head"><p>TCP-порт назначения</p></th>
+<th class="head"><p>Решение</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>frontend → API</p></td>
+<td><p>8000</p></td>
+<td><p>ALLOW</p></td>
+</tr>
+<tr class="row-odd"><td><p>API → оба PostgreSQL</p></td>
+<td><p>5432</p></td>
+<td><p>ALLOW</p></td>
+</tr>
+<tr class="row-even"><td><p>PostgreSQL ↔ PostgreSQL</p></td>
+<td><p>5432</p></td>
+<td><p>ALLOW: репликация/rejoin</p></td>
+</tr>
+<tr class="row-odd"><td><p>maintenance → оба PostgreSQL</p></td>
+<td><p>5432</p></td>
+<td><p>ALLOW: обслуживание</p></td>
+</tr>
+<tr class="row-even"><td><p>API → Redis</p></td>
+<td><p>6379</p></td>
+<td><p>ALLOW</p></td>
+</tr>
+<tr class="row-odd"><td><p>API / worker → все RabbitMQ</p></td>
+<td><p>5672</p></td>
+<td><p>ALLOW</p></td>
+</tr>
+<tr class="row-even"><td><p>RabbitMQ ↔ RabbitMQ</p></td>
+<td><p>4369, 25672, 35672–35682</p></td>
+<td><p>ALLOW: cluster и CLI</p></td>
+</tr>
+<tr class="row-odd"><td><p>Остальные связи внутри проектных мостов</p></td>
+<td><p>любые</p></td>
+<td><p>DROP</p></td>
+</tr>
+</tbody>
+</table>
+<p>ARP и ответы установленных соединений разрешены. Чужие мосты пропускаются
+без фильтрации этой таблицей. Остальной трафик проектных мостов учитывается
+DROP-счётчиком и логируется с ограничением частоты. Worker → PostgreSQL/Redis
+не имеет прямого маршрута: это сегментация, а не доказательство срабатывания DROP.</p>
+</section>
+<section id="id2">
+<h2>Границы доверия и потеря связи<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<p>Frontend получает внешние HTTP-запросы, но не имеет прямого доступа к данным.
+API проверяет доменные права и обращается к хранилищам; worker получает только
+события. Сетевая доступность не заменяет авторизацию конкретного игрового действия.</p>
+<p>Если firewall блокирует API → PostgreSQL, процесс API остаётся живым, но
+readiness и запросы, которым нужна БД, возвращают <strong>503</strong>. Чтение из ещё
+доступного кеша может продолжиться. PostgreSQL при этом может быть исправен:
+причина отказа — потеря необходимой связи. После снятия блокировки клиент БД
+восстанавливает соединение.</p>
+<p>Проектная политика применяется отдельно через <code class="docutils literal notranslate"><span class="pre">infra/firewall/firewall.sh</span></code>.
+Скрипт заменяет или удаляет только таблицу <code class="docutils literal notranslate"><span class="pre">bridge</span> <span class="pre">mini_checkers</span></code>, сохраняя
+правила Docker и других приложений. После перезагрузки хоста политику нужно
+применить заново.</p>
+</section>
+<section id="id3">
+<h2>Прикладные ограничения доступа<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<p>Токен игрока — 32 случайных байта; в БД хранится SHA-256, в запросе —
+<code class="docutils literal notranslate"><span class="pre">X-Player-Token</span></code>. Размер тела ограничен 1 КиБ.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="events.html" class="btn btn-neutral float-left" title="События, outbox и worker" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="reliability.html" class="btn btn-neutral float-right" title="Надёжность и резервные копии" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права . </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

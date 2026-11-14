@@ -1,0 +1,14 @@
+.. _exhale_variable_namespacemini__checkers_1aeb6dfb370ba66f365df763ce1c8830fd:
+
+Variable mini_checkers::kBlackPiece
+===================================
+
+- Defined in :ref:`file_shls_game_rules.h`
+
+
+Variable Documentation
+----------------------
+
+
+.. doxygenvariable:: mini_checkers::kBlackPiece
+   :project: Mini Checkers

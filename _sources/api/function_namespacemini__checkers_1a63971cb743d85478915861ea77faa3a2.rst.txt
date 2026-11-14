@@ -1,0 +1,14 @@
+.. _exhale_function_namespacemini__checkers_1a63971cb743d85478915861ea77faa3a2:
+
+Function mini_checkers::ValidateMove
+====================================
+
+- Defined in :ref:`file_shls_game_rules.h`
+
+
+Function Documentation
+----------------------
+
+
+.. doxygenfunction:: mini_checkers::ValidateMove(const Position&, Cell, Cell)
+   :project: Mini Checkers

@@ -1,0 +1,201 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PostgreSQL и кеш &mdash; Mini Checkers — документация</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/collapsible-lists/css/tree_view.css?v=a885cde7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f5f217e7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=372fde1a"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/translations.js?v=cd1d70c9"></script>
+      <script src="../_static/collapsible-lists/js/CollapsibleLists.compressed.js?v=73120307"></script>
+      <script src="../_static/collapsible-lists/js/apply-collapsible-lists.js?v=660e4f45"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../genindex.html" />
+    <link rel="search" title="Поиск" href="../search.html" />
+    <link rel="next" title="События, outbox и worker" href="events.html" />
+    <link rel="prev" title="Игра и HTTP API" href="../development/api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mini Checkers
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Архитектура проекта</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Архитектура и компоненты</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/api.html">Игра и HTTP API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">PostgreSQL и кеш</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Схема и владение данными</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Атомарная запись</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cache-aside">Cache-aside</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="events.html">События, outbox и worker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Сегментация и firewall</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reliability.html">Надёжность и резервные копии</a></li>
+<li class="toctree-l1"><a class="reference internal" href="service-levels.html">Уровень обслуживания и наблюдаемость</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/library_root.html">Документация API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Mini Checkers</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">PostgreSQL и кеш</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/architecture/storage.md.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="postgresql">
+<h1>PostgreSQL и кеш<a class="headerlink" href="#postgresql" title="Ссылка на этот заголовок"></a></h1>
+<section id="id1">
+<h2>Схема и владение данными<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h2>
+<p>Game API применяет <code class="docutils literal notranslate"><span class="pre">infra/postgres/schema.sql</span></code> при запуске. Один <code class="docutils literal notranslate"><span class="pre">DO</span></code>-блок
+атомарно создаёт таблицы и обновляет старую схему; повторное применение
+допустимо. В образе путь задан через <code class="docutils literal notranslate"><span class="pre">POSTGRES_SCHEMA_FILE</span></code>.</p>
+<div class="graphviz"><object data="../_images/graphviz-8fb71d0c6251b3a6f497b0ec706b116b4d34a698.svg" type="image/svg+xml" class="graphviz">
+<p class="warning">Таблицы games, game_players, moves и outbox_events</p></object></div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Таблица</p></th>
+<th class="head"><p>Назначение</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">games</span></code></p></td>
+<td><p>Доска, статус, очередь, победитель, версия и незаконченная цепочка взятий.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">game_players</span></code></p></td>
+<td><p>Сторона и SHA-256 токена; максимум два игрока на партию.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">moves</span></code></p></td>
+<td><p>История участков хода: координаты 0–63, жертва, превращение.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">outbox_events</span></code></p></td>
+<td><p>События, ожидающие подтверждения брокером.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Доска хранится строкой из 64 символов. Каждый прыжок цепочки — отдельная
+строка <code class="docutils literal notranslate"><span class="pre">moves</span></code> и новая версия игры. Продолжение сохраняется в <code class="docutils literal notranslate"><span class="pre">capture_from</span></code>
+и <code class="docutils literal notranslate"><span class="pre">captured_cells</span></code>, поэтому переживает рестарт API.</p>
+<p>Приложение выполняет все основные операции SQL:
+<strong>INSERT</strong> — создание игры, игрока, хода и события; <strong>SELECT</strong> — чтение и
+авторизация; <strong>UPDATE</strong> — изменение партии; <strong>DELETE</strong> — удаление доставленного
+outbox-события. Удаление партии через публичный API не предусмотрено.</p>
+</section>
+<section id="id2">
+<h2>Атомарная запись<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<p>Изменение партии, ход и событие фиксируются одним SQL CTE. При ходе и
+завершении <code class="docutils literal notranslate"><span class="pre">WHERE</span> <span class="pre">version</span> <span class="pre">=</span> <span class="pre">...</span></code> защищает от конкурентной записи: один запрос
+меняет версию, другой получает <code class="docutils literal notranslate"><span class="pre">409</span></code>. Join занимает сторону только при
+<code class="docutils literal notranslate"><span class="pre">status='waiting'</span></code>. Ошибка SQL не оставляет частично выполненного изменения.</p>
+<p>После коммита API инвалидирует кеш, а publisher доставляет
+<a class="reference internal" href="events.html"><span class="std std-doc">событие из outbox</span></a>. SQL-транзакция не охватывает Redis и RabbitMQ.</p>
+</section>
+<section id="cache-aside">
+<h2>Cache-aside<a class="headerlink" href="#cache-aside" title="Ссылка на этот заголовок"></a></h2>
+<div class="graphviz"><object data="../_images/graphviz-c45f7918201f03b3bee8a47ed43e62aba5fa2c48.svg" type="image/svg+xml" class="graphviz">
+<p class="warning">Попадание в Redis, заполнение при промахе и обход недоступного кеша</p></object></div>
+<p>Ключ — <code class="docutils literal notranslate"><span class="pre">game:{uuid}</span></code> в нижнем регистре, TTL в Compose — <strong>60 с</strong>.
+<code class="docutils literal notranslate"><span class="pre">X-Cache</span></code> показывает путь чтения:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Значение</p></th>
+<th class="head"><p>Поведение</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">HIT</span></code></p></td>
+<td><p>Возврат кеша с <code class="docutils literal notranslate"><span class="pre">rules_version=2</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MISS</span></code></p></td>
+<td><p>Нет актуальной записи: чтение PostgreSQL и попытка заполнить Redis.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BYPASS</span></code></p></td>
+<td><p>Ошибка Redis или отключённый клиент: чтение PostgreSQL без кеша.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Redis не сохраняется на диск. Ошибка заполнения/инвалидации не откатывает
+успешную запись БД. TTL и повторная инвалидация publisher уменьшают устаревание,
+но гонка чтения и записи всё ещё возможна. PostgreSQL остаётся источником истины;
+при <a class="reference internal" href="reliability.html"><span class="std std-doc">promotion</span></a> очищаются только ключи <code class="docutils literal notranslate"><span class="pre">game:*</span></code>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="../development/api.html" class="btn btn-neutral float-left" title="Игра и HTTP API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="events.html" class="btn btn-neutral float-right" title="События, outbox и worker" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права . </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

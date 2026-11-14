@@ -1,0 +1,14 @@
+.. _exhale_function_namespacemini__checkers_1ad01cd7b268c57eb7bb811516571a0c0e:
+
+Function mini_checkers::LegalMoves
+==================================
+
+- Defined in :ref:`file_shls_game_rules.h`
+
+
+Function Documentation
+----------------------
+
+
+.. doxygenfunction:: mini_checkers::LegalMoves(const Position&)
+   :project: Mini Checkers

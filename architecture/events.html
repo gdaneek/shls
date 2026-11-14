@@ -1,0 +1,167 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>События, outbox и worker &mdash; Mini Checkers — документация</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/collapsible-lists/css/tree_view.css?v=a885cde7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f5f217e7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=372fde1a"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/translations.js?v=cd1d70c9"></script>
+      <script src="../_static/collapsible-lists/js/CollapsibleLists.compressed.js?v=73120307"></script>
+      <script src="../_static/collapsible-lists/js/apply-collapsible-lists.js?v=660e4f45"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../genindex.html" />
+    <link rel="search" title="Поиск" href="../search.html" />
+    <link rel="next" title="Сегментация и firewall" href="security.html" />
+    <link rel="prev" title="PostgreSQL и кеш" href="storage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mini Checkers
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Архитектура проекта</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Архитектура и компоненты</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/api.html">Игра и HTTP API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage.html">PostgreSQL и кеш</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">События, outbox и worker</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Путь события</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Сообщение и очередь</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Гарантии и ограничения</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Сегментация и firewall</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reliability.html">Надёжность и резервные копии</a></li>
+<li class="toctree-l1"><a class="reference internal" href="service-levels.html">Уровень обслуживания и наблюдаемость</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/library_root.html">Документация API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Mini Checkers</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">События, outbox и worker</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/architecture/events.md.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="outbox-worker">
+<h1>События, outbox и worker<a class="headerlink" href="#outbox-worker" title="Ссылка на этот заголовок"></a></h1>
+<section id="id1">
+<h2>Путь события<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h2>
+<div class="graphviz"><object data="../_images/graphviz-ce849461d30786883c91edb4f6b31150d244b0e4.svg" type="image/svg+xml" class="graphviz">
+<p class="warning">SQL-коммит, инвалидация Redis, публикация события и обработка worker</p></object></div>
+<ol class="arabic simple">
+<li><p>API фиксирует изменение игры и outbox-событие в одной транзакции.</p></li>
+<li><p>После коммита обработчик пытается удалить <code class="docutils literal notranslate"><span class="pre">game:{id}</span></code> из Redis и отвечает клиенту.</p></li>
+<li><p>Отдельный поток API читает outbox по <code class="docutils literal notranslate"><span class="pre">sequence</span></code>, повторяет инвалидацию
+кеша и публикует persistent message через <code class="docutils literal notranslate"><span class="pre">rabbitmq-c</span></code>.</p></li>
+<li><p>После publisher confirm удаляет строку outbox. Без confirm строка остаётся для повтора.</p></li>
+<li><p>Worker получает сообщение, пишет JSON-лог в stdout и лишь затем отправляет ACK.</p></li>
+</ol>
+<p>Confirm подтверждает приём брокером, а не обработку worker. Удаление outbox
+не ждёт consumer ACK; HTTP-ответ также не ждёт этих действий. Повторная
+инвалидация нужна при падении API между SQL-коммитом и первым <code class="docutils literal notranslate"><span class="pre">DEL</span></code>.</p>
+</section>
+<section id="id2">
+<h2>Сообщение и очередь<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<p>Типы: <code class="docutils literal notranslate"><span class="pre">game.created</span></code>, <code class="docutils literal notranslate"><span class="pre">player.joined</span></code>, <code class="docutils literal notranslate"><span class="pre">move.made</span></code>, <code class="docutils literal notranslate"><span class="pre">game.finished</span></code>.
+JSON содержит <code class="docutils literal notranslate"><span class="pre">event_id</span></code>, <code class="docutils literal notranslate"><span class="pre">game_id</span></code>, <code class="docutils literal notranslate"><span class="pre">type</span></code>, <code class="docutils literal notranslate"><span class="pre">request_id</span></code>, <code class="docutils literal notranslate"><span class="pre">occurred_at</span></code>, <code class="docutils literal notranslate"><span class="pre">data</span></code>.
+Worker записывает тип, ID, payload и признак повторной доставки в stdout.
+Связь журналов и показателей описана в <a class="reference internal" href="service-levels.html"><span class="std std-doc">наблюдаемости</span></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">game.events.quorum</span></code> — долговечная очередь с тремя репликами, работающая при
+большинстве <strong>2/3</strong>. Клиенты перебирают адреса <code class="docutils literal notranslate"><span class="pre">rabbitmq</span></code>, <code class="docutils literal notranslate"><span class="pre">rabbitmq-2</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rabbitmq-3</span></code>. Сетевые операции ограничены таймаутом 5 с; publisher повторяет
+попытку примерно через 1 с, worker — через 2 с после разрыва.</p>
+</section>
+<section id="id3">
+<h2>Гарантии и ограничения<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<ul class="simple">
+<li><p>Падение после confirm, но до удаления outbox, даёт повтор с тем же <code class="docutils literal notranslate"><span class="pre">event_id</span></code>.
+Worker не дедуплицирует логи: доставка <strong>at-least-once</strong>, не exactly-once.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x-delivery-limit=-1</span></code> отключает удаление по лимиту повторных доставок.
+Отдельной dead-letter политики нет.</p></li>
+<li><p>При недоступности брокера или потере quorum события копятся в outbox.
+В стеке один API/publisher; координация нескольких издателей не реализована.</p></li>
+<li><p>Потеря диска/хоста и потеря последних транзакций при асинхронном PostgreSQL
+failover не устраняются очередью. Сценарии отказов — в <a class="reference internal" href="reliability.html"><span class="std std-doc">надёжности</span></a>.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="storage.html" class="btn btn-neutral float-left" title="PostgreSQL и кеш" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="security.html" class="btn btn-neutral float-right" title="Сегментация и firewall" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права . </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

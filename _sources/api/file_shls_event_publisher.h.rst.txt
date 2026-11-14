@@ -1,0 +1,79 @@
+
+.. _file_shls_event_publisher.h:
+
+File event_publisher.h
+======================
+
+|exhale_lsh| :ref:`Parent directory <dir_shls>` (``shls``)
+
+.. |exhale_lsh| unicode:: U+021B0 .. UPWARDS ARROW WITH TIP LEFTWARDS
+
+
+
+Фоновая доставка событий из транзакционного outbox в RabbitMQ. 
+
+
+
+.. contents:: Содержание
+   :local:
+   :backlinks: none
+
+Definition (``shls/event_publisher.h``)
+---------------------------------------
+
+
+.. toctree::
+   :maxdepth: 1
+
+   program_listing_file_shls_event_publisher.h.rst
+
+
+
+Detailed Description
+--------------------
+
+Блокирующие операции rabbitmq-c выполняются в собственном потоке, отдельно от HTTP-обработчиков. 
+
+
+
+
+Includes
+--------
+
+
+- ``condition_variable``
+
+- ``cstddef``
+
+- ``drogon/nosql/RedisClient.h``
+
+- ``drogon/orm/DbClient.h``
+
+- ``mutex``
+
+- ``string``
+
+- ``thread``
+
+
+
+
+
+
+Namespaces
+----------
+
+
+- :ref:`namespace_mini_checkers`
+
+
+Classes
+-------
+
+
+- :ref:`exhale_struct_structmini__checkers_1_1EventPublisher_1_1Config`
+
+- :ref:`exhale_struct_structmini__checkers_1_1EventPublisher_1_1Message`
+
+- :ref:`exhale_class_classmini__checkers_1_1EventPublisher`
+

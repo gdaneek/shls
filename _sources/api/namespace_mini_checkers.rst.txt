@@ -1,0 +1,86 @@
+
+.. _namespace_mini_checkers:
+
+Namespace mini_checkers
+=======================
+
+
+Правила игры, HTTP-обработчики и доставка событий. 
+
+
+
+
+.. contents:: Содержание
+   :local:
+   :backlinks: none
+
+
+
+
+
+Classes
+-------
+
+
+- :ref:`exhale_struct_structmini__checkers_1_1Cell`
+
+- :ref:`exhale_struct_structmini__checkers_1_1EventPublisher_1_1Config`
+
+- :ref:`exhale_struct_structmini__checkers_1_1EventPublisher_1_1Message`
+
+- :ref:`exhale_struct_structmini__checkers_1_1Move`
+
+- :ref:`exhale_struct_structmini__checkers_1_1MoveResult`
+
+- :ref:`exhale_struct_structmini__checkers_1_1Position`
+
+- :ref:`exhale_class_classmini__checkers_1_1EventPublisher`
+
+- :ref:`exhale_class_classmini__checkers_1_1GameApi`
+
+
+Enums
+-----
+
+
+- :ref:`exhale_enum_namespacemini__checkers_1a8c3c76c4e2a3c89af2d7b36c8094507a`
+
+
+Functions
+---------
+
+
+- :ref:`exhale_function_namespacemini__checkers_1a3ec9a55366d64d62bbabe5e08a1c435c`
+
+- :ref:`exhale_function_namespacemini__checkers_1a483e76c149d00a3fe46dc1c63169b0d2`
+
+- :ref:`exhale_function_namespacemini__checkers_1ad8914498bf80ce4c22a70c0d548c10a3`
+
+- :ref:`exhale_function_namespacemini__checkers_1a545858afbf2ffb8c6dd3a068c78ddb4b`
+
+- :ref:`exhale_function_namespacemini__checkers_1ad01cd7b268c57eb7bb811516571a0c0e`
+
+- :ref:`exhale_function_namespacemini__checkers_1ad654239f35dec7d115ec6749ac042467`
+
+- :ref:`exhale_function_namespacemini__checkers_1a1e1ec9235453f860c234af4a4270315f`
+
+- :ref:`exhale_function_namespacemini__checkers_1a372321f5865ff57d3732753409a7054a`
+
+- :ref:`exhale_function_namespacemini__checkers_1a63971cb743d85478915861ea77faa3a2`
+
+
+Variables
+---------
+
+
+- :ref:`exhale_variable_namespacemini__checkers_1a50286c7f0ebde94d02a57555a229841b`
+
+- :ref:`exhale_variable_namespacemini__checkers_1aeb6dfb370ba66f365df763ce1c8830fd`
+
+- :ref:`exhale_variable_namespacemini__checkers_1a365321a7e7bbfcacfacad3c570bfafa7`
+
+- :ref:`exhale_variable_namespacemini__checkers_1ae01ed2d5dd507cce63737c2a4e24b5fc`
+
+- :ref:`exhale_variable_namespacemini__checkers_1a93201fe1ab3559f66e59b934d2df72fe`
+
+- :ref:`exhale_variable_namespacemini__checkers_1a67b7ef1c0351c999cd5f9645ec561920`

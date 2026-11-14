@@ -1,0 +1,364 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Class EventPublisher &mdash; Mini Checkers — документация</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/collapsible-lists/css/tree_view.css?v=a885cde7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f5f217e7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=372fde1a"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/translations.js?v=cd1d70c9"></script>
+      <script src="../_static/collapsible-lists/js/CollapsibleLists.compressed.js?v=73120307"></script>
+      <script src="../_static/collapsible-lists/js/apply-collapsible-lists.js?v=660e4f45"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../genindex.html" />
+    <link rel="search" title="Поиск" href="../search.html" />
+    <link rel="next" title="Class GameApi" href="classmini__checkers_1_1GameApi.html" />
+    <link rel="prev" title="Struct Position" href="structmini__checkers_1_1Position.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mini Checkers
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Архитектура проекта</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture/overview.html">Архитектура и компоненты</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/api.html">Игра и HTTP API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/storage.html">PostgreSQL и кеш</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/events.html">События, outbox и worker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/security.html">Сегментация и firewall</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/reliability.html">Надёжность и резервные копии</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/service-levels.html">Уровень обслуживания и наблюдаемость</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="library_root.html">Документация API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="library_root.html#class-hierarchy">Class Hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="library_root.html#file-hierarchy">File Hierarchy</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="library_root.html#id1">Все сущности</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="library_root.html#namespaces">Namespaces</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="library_root.html#classes-and-structs">Classes and Structs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="library_root.html#enums">Enums</a></li>
+<li class="toctree-l3"><a class="reference internal" href="library_root.html#functions">Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="library_root.html#variables">Variables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Mini Checkers</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="library_root.html">Документация API</a></li>
+      <li class="breadcrumb-item active">Class EventPublisher</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/classmini__checkers_1_1EventPublisher.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="class-eventpublisher">
+<span id="exhale-class-classmini-checkers-1-1eventpublisher"></span><h1>Class EventPublisher<a class="headerlink" href="#class-eventpublisher" title="Ссылка на этот заголовок"></a></h1>
+<ul class="simple">
+<li><p>Defined in <a class="reference internal" href="file_shls_event_publisher.h.html#file-shls-event-publisher-h"><span class="std std-ref">File event_publisher.h</span></a></p></li>
+</ul>
+<section id="nested-relationships">
+<h2>Nested Relationships<a class="headerlink" href="#nested-relationships" title="Ссылка на этот заголовок"></a></h2>
+<section id="nested-types">
+<h3>Nested Types<a class="headerlink" href="#nested-types" title="Ссылка на этот заголовок"></a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="structmini__checkers_1_1EventPublisher_1_1Config.html#exhale-struct-structmini-checkers-1-1eventpublisher-1-1config"><span class="std std-ref">Struct EventPublisher::Config</span></a></p></li>
+<li><p><a class="reference internal" href="structmini__checkers_1_1EventPublisher_1_1Message.html#exhale-struct-structmini-checkers-1-1eventpublisher-1-1message"><span class="std std-ref">Struct EventPublisher::Message</span></a></p></li>
+</ul>
+</section>
+</section>
+<section id="class-documentation">
+<h2>Class Documentation<a class="headerlink" href="#class-documentation" title="Ссылка на этот заголовок"></a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisherE">
+<span id="_CPPv3N13mini_checkers14EventPublisherE"></span><span id="_CPPv2N13mini_checkers14EventPublisherE"></span><span id="mini_checkers::EventPublisher"></span><span class="target" id="classmini__checkers_1_1EventPublisher"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">EventPublisher</span></span></span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisherE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Доставляет события outbox в отдельном потоке и удаляет их после подтверждения брокера. </p>
+<p>Читает события по sequence, повторяет инвалидацию кеша и отправляет persistent-сообщения в кворумную очередь. Строка outbox удаляется после ACK брокера. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Рассчитан на одного издателя для общей таблицы outbox. Сбой между подтверждением публикации и удалением строки может привести к повторной доставке. </p>
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher14EventPublisherE6ConfigN6drogon3orm11DbClientPtrEN6drogon5nosql14RedisClientPtrE">
+<span id="_CPPv3N13mini_checkers14EventPublisher14EventPublisherE6ConfigN6drogon3orm11DbClientPtrEN6drogon5nosql14RedisClientPtrE"></span><span id="_CPPv2N13mini_checkers14EventPublisher14EventPublisherE6ConfigN6drogon3orm11DbClientPtrEN6drogon5nosql14RedisClientPtrE"></span><span id="mini_checkers::EventPublisher::EventPublisher__Config.drogon::orm::DbClientPtr.drogon::nosql::RedisClientPtr"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1a8e7a393acbfef6663be835191fede00b"></span><span class="sig-name descname"><span class="n"><span class="pre">EventPublisher</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structmini__checkers_1_1EventPublisher_1_1Config.html#_CPPv4N13mini_checkers14EventPublisher6ConfigE" title="mini_checkers::EventPublisher::Config"><span class="n"><span class="pre">Config</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">config</span></span>, <span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">orm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">DbClientPtr</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">db</span></span>, <span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nosql</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">RedisClientPtr</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">redis</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher14EventPublisherE6ConfigN6drogon3orm11DbClientPtrEN6drogon5nosql14RedisClientPtrE" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Задаёт настройки брокера и клиенты хранилищ без запуска потока. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Подключение к брокеру выполняется после <a class="reference internal" href="#classmini__checkers_1_1EventPublisher_1a621d474ac1d64f66184b828be4a24efa"><span class="std std-ref">Start()</span></a>, а не в конструкторе. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – <strong>[in]</strong> Настройки подключения и имя кворумной очереди. </p></li>
+<li><p><strong>db</strong> – <strong>[in]</strong> Ненулевой клиент PostgreSQL с доступом к outbox_events. </p></li>
+<li><p><strong>redis</strong> – <strong>[in]</strong> Клиент Redis для инвалидации кеша; может быть nullptr. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisherD0Ev">
+<span id="_CPPv3N13mini_checkers14EventPublisherD0Ev"></span><span id="_CPPv2N13mini_checkers14EventPublisherD0Ev"></span><span id="mini_checkers::EventPublisher::~EventPublisher"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1a5f9024567c887c7058bbc3842ea74388"></span><span class="sig-name descname"><span class="n"><span class="pre">~EventPublisher</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisherD0Ev" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Останавливает поток и ждёт его завершения, оставляя недоставленные события в outbox. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Прерывает ожидание повтора, но не текущую блокирующую операцию. Не пытается опустошить outbox; не должен вызываться из потока издателя. </p>
+</div>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher14EventPublisherERK14EventPublisher">
+<span id="_CPPv3N13mini_checkers14EventPublisher14EventPublisherERK14EventPublisher"></span><span id="_CPPv2N13mini_checkers14EventPublisher14EventPublisherERK14EventPublisher"></span><span id="mini_checkers::EventPublisher::EventPublisher__EventPublisherCR"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1a059d28879dccd3bca48055c5529be9d5"></span><span class="sig-name descname"><span class="n"><span class="pre">EventPublisher</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N13mini_checkers14EventPublisher14EventPublisherERK14EventPublisher" title="mini_checkers::EventPublisher::EventPublisher"><span class="n"><span class="pre">EventPublisher</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">delete</span></span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher14EventPublisherERK14EventPublisher" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Запрещает копирование владельца потока и соединения. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> – <strong>[in]</strong> Объект-источник; копирование недоступно. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisheraSERK14EventPublisher">
+<span id="_CPPv3N13mini_checkers14EventPublisheraSERK14EventPublisher"></span><span id="_CPPv2N13mini_checkers14EventPublisheraSERK14EventPublisher"></span><span id="mini_checkers::EventPublisher::assign-operator__EventPublisherCR"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1a42db1639cc851273a83ac5c47a836abc"></span><a class="reference internal" href="#_CPPv4N13mini_checkers14EventPublisherE" title="mini_checkers::EventPublisher"><span class="n"><span class="pre">EventPublisher</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N13mini_checkers14EventPublisherE" title="mini_checkers::EventPublisher"><span class="n"><span class="pre">EventPublisher</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">delete</span></span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisheraSERK14EventPublisher" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Запрещает присваивание владельцу потока и соединения. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> – <strong>[in]</strong> Объект-источник; присваивание недоступно. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher5StartEv">
+<span id="_CPPv3N13mini_checkers14EventPublisher5StartEv"></span><span id="_CPPv2N13mini_checkers14EventPublisher5StartEv"></span><span id="mini_checkers::EventPublisher::Start"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1a621d474ac1d64f66184b828be4a24efa"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Start</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher5StartEv" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Запускает поток публикации; вызывается один раз после создания схемы. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Возвращается без ожидания подключения к RabbitMQ или доставки событий. Повторный вызов для работающего потока недопустим. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Бросает исключение<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">system_error</span></span></span> – Если операционная система не смогла создать поток. </p>
+</dd>
+<dt class="field-even">Pre<span class="colon">:</span></dt>
+<dd class="field-even"><p>Таблица outbox_events создана; поток ещё не запускался. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-private-functions">Private Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher3RunEv">
+<span id="_CPPv3N13mini_checkers14EventPublisher3RunEv"></span><span id="_CPPv2N13mini_checkers14EventPublisher3RunEv"></span><span id="mini_checkers::EventPublisher::Run"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1a2cdebd021324c11f690d6723a721e3a1"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Run</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher3RunEv" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Публикует outbox по порядку, повторяя неудачные попытки до остановки. </p>
+<p>При отсутствии событий или ошибке делает паузу перед следующим чтением. После запроса остановки закрывает соединение. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Ошибка инвалидации Redis не блокирует публикацию. SQL-ошибки и ошибки доставки оставляют событие в outbox для следующей попытки. </p>
+</div>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher7ConnectEv">
+<span id="_CPPv3N13mini_checkers14EventPublisher7ConnectEv"></span><span id="_CPPv2N13mini_checkers14EventPublisher7ConnectEv"></span><span id="mini_checkers::EventPublisher::Connect"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1acb24fd8f188df552d755a04bc487a6fe"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Connect</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher7ConnectEv" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Подключается к следующему брокеру и настраивает очередь и подтверждения. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Одна попытка проверяет один адрес. Следующая попытка использует следующий адрес списка; при ошибке созданное соединение освобождается. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Pre<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Активного соединения нет; вызывается только из потока издателя. </p>
+</dd>
+<dt class="field-even">Результат<span class="colon">:</span></dt>
+<dd class="field-even"><p>true при готовности соединения, очереди и publisher confirms; false при ошибке подключения, входа или настройки. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher10DisconnectEv">
+<span id="_CPPv3N13mini_checkers14EventPublisher10DisconnectEv"></span><span id="_CPPv2N13mini_checkers14EventPublisher10DisconnectEv"></span><span id="mini_checkers::EventPublisher::Disconnect"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1af94fe872071ade5a0ae84e353ead2fb0"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Disconnect</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher10DisconnectEv" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Освобождает текущее AMQP-соединение, если оно существует. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Вызывается из потока издателя; повторный вызов безопасен. Не удаляет очередь брокера и строки outbox. </p>
+</div>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher4SendERK7Message">
+<span id="_CPPv3N13mini_checkers14EventPublisher4SendERK7Message"></span><span id="_CPPv2N13mini_checkers14EventPublisher4SendERK7Message"></span><span id="mini_checkers::EventPublisher::Send__MessageCR"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1a2ec8c7cf2ea0e23e71f85cec4d9d2157"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Send</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="structmini__checkers_1_1EventPublisher_1_1Message.html#_CPPv4N13mini_checkers14EventPublisher7MessageE" title="mini_checkers::EventPublisher::Message"><span class="n"><span class="pre">Message</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">message</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher4SendERK7Message" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Публикует сохраняемое событие и возвращает признак подтверждения брокером. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Использует обменник по умолчанию и имя очереди как ключ маршрутизации. Подтверждение брокера не означает обработку потребителем; false не исключает фактическую доставку, если подтверждение было потеряно. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>message</strong> – <strong>[in]</strong> Событие с типом, постоянным идентификатором и JSON-телом. </p>
+</dd>
+<dt class="field-even">Pre<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#classmini__checkers_1_1EventPublisher_1acb24fd8f188df552d755a04bc487a6fe"><span class="std std-ref">Connect()</span></a> успешно завершён; вызов выполняется из потока издателя. </p>
+</dd>
+<dt class="field-odd">Результат<span class="colon">:</span></dt>
+<dd class="field-odd"><p>true только после ACK брокера; false при ошибке, таймауте или NACK. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher15WaitBeforeRetryEv">
+<span id="_CPPv3N13mini_checkers14EventPublisher15WaitBeforeRetryEv"></span><span id="_CPPv2N13mini_checkers14EventPublisher15WaitBeforeRetryEv"></span><span id="mini_checkers::EventPublisher::WaitBeforeRetry"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1a9f26be4bc2e068bc0eb222cf4444c71e"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">WaitBeforeRetry</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher15WaitBeforeRetryEv" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Ждёт окончания задержки перед повтором или уведомления об остановке. </p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Ожидает до одной секунды с проверкой флага stopping_. Условная переменная позволяет деструктору прервать паузу без ожидания всего интервала. </p>
+</div>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-private-members">Private Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher7config_E">
+<span id="_CPPv3N13mini_checkers14EventPublisher7config_E"></span><span id="_CPPv2N13mini_checkers14EventPublisher7config_E"></span><span id="mini_checkers::EventPublisher::config___Config"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1a27e438c752da4d4ab583afbd7bf101e8"></span><a class="reference internal" href="structmini__checkers_1_1EventPublisher_1_1Config.html#_CPPv4N13mini_checkers14EventPublisher6ConfigE" title="mini_checkers::EventPublisher::Config"><span class="n"><span class="pre">Config</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">config_</span></span></span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher7config_E" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Настройки брокера. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher3db_E">
+<span id="_CPPv3N13mini_checkers14EventPublisher3db_E"></span><span id="_CPPv2N13mini_checkers14EventPublisher3db_E"></span><span id="mini_checkers::EventPublisher::db___drogon::orm::DbClientPtr"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1ac974658bc11f89d07f5c6ce2c9afa64e"></span><span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">orm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">DbClientPtr</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">db_</span></span></span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher3db_E" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Долговечное хранилище outbox. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher6redis_E">
+<span id="_CPPv3N13mini_checkers14EventPublisher6redis_E"></span><span id="_CPPv2N13mini_checkers14EventPublisher6redis_E"></span><span id="mini_checkers::EventPublisher::redis___drogon::nosql::RedisClientPtr"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1a4e81b2add19dc54337ea7b3cb19a59a3"></span><span class="n"><span class="pre">drogon</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nosql</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">RedisClientPtr</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">redis_</span></span></span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher6redis_E" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Необязательный клиент инвалидации кеша. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher6mutex_E">
+<span id="_CPPv3N13mini_checkers14EventPublisher6mutex_E"></span><span id="_CPPv2N13mini_checkers14EventPublisher6mutex_E"></span><span id="mini_checkers::EventPublisher::mutex___std::mutex"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1a4a3eed379dacdc1e699a16558ac16e06"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mutex</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mutex_</span></span></span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher6mutex_E" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Защищает флаг остановки. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher3cv_E">
+<span id="_CPPv3N13mini_checkers14EventPublisher3cv_E"></span><span id="_CPPv2N13mini_checkers14EventPublisher3cv_E"></span><span id="mini_checkers::EventPublisher::cv___std::condition_variable"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1a1b05abd5fcdf2556b895124ff19539b1"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">condition_variable</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cv_</span></span></span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher3cv_E" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Прерывает ожидание повтора при остановке. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher9stopping_E">
+<span id="_CPPv3N13mini_checkers14EventPublisher9stopping_E"></span><span id="_CPPv2N13mini_checkers14EventPublisher9stopping_E"></span><span id="mini_checkers::EventPublisher::stopping___b"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1ab33ea2e3c0336da321ffe00a44ff5ad1"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">stopping_</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher9stopping_E" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Запрос остановки под защитой mutex_. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher11connection_E">
+<span id="_CPPv3N13mini_checkers14EventPublisher11connection_E"></span><span id="_CPPv2N13mini_checkers14EventPublisher11connection_E"></span><span id="mini_checkers::EventPublisher::connection___amqp_connection_state_t_P"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1a27af85afac7dda966d24973fa84102d0"></span><span class="n"><span class="pre">amqp_connection_state_t_</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">connection_</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">nullptr</span></span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher11connection_E" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Соединение издателя событий. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher10next_host_E">
+<span id="_CPPv3N13mini_checkers14EventPublisher10next_host_E"></span><span id="_CPPv2N13mini_checkers14EventPublisher10next_host_E"></span><span id="mini_checkers::EventPublisher::next_host___std::s"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1a3b63278f65ba29ff6d02f19e0c907933"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">next_host_</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher10next_host_E" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Смещение следующего адреса в списке брокеров. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N13mini_checkers14EventPublisher7thread_E">
+<span id="_CPPv3N13mini_checkers14EventPublisher7thread_E"></span><span id="_CPPv2N13mini_checkers14EventPublisher7thread_E"></span><span id="mini_checkers::EventPublisher::thread___std::thread"></span><span class="target" id="classmini__checkers_1_1EventPublisher_1a67524856e2097aab0e6fd65269131ddc"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">thread</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">thread_</span></span></span><a class="headerlink" href="#_CPPv4N13mini_checkers14EventPublisher7thread_E" title="Ссылка на это определение"></a><br /></dt>
+<dd><p>Поток блокирующих операций с outbox и AMQP. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="structmini__checkers_1_1Position.html" class="btn btn-neutral float-left" title="Struct Position" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="classmini__checkers_1_1GameApi.html" class="btn btn-neutral float-right" title="Class GameApi" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права . </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,257 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Checkers &mdash; Mini Checkers — документация</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="_static/collapsible-lists/css/tree_view.css?v=a885cde7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=f5f217e7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=372fde1a"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/translations.js?v=cd1d70c9"></script>
+      <script src="_static/collapsible-lists/js/CollapsibleLists.compressed.js?v=73120307"></script>
+      <script src="_static/collapsible-lists/js/apply-collapsible-lists.js?v=660e4f45"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Архитектура и компоненты" href="architecture/overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            Mini Checkers
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Архитектура проекта</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="architecture/overview.html">Архитектура и компоненты</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/api.html">Игра и HTTP API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture/storage.html">PostgreSQL и кеш</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture/events.html">События, outbox и worker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture/security.html">Сегментация и firewall</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture/reliability.html">Надёжность и резервные копии</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture/service-levels.html">Уровень обслуживания и наблюдаемость</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/library_root.html">Документация API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Mini Checkers</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Mini Checkers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.md.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mini-checkers">
+<h1>Mini Checkers<a class="headerlink" href="#mini-checkers" title="Ссылка на этот заголовок"></a></h1>
+<p><a class="reference external" href="https://github.com/gdaneek/shls-project/actions/workflows/ci.yml?query=branch%3Adev"><img alt="Tests" src="https://github.com/gdaneek/shls-project/actions/workflows/ci.yml/badge.svg?branch=dev" /></a>
+<a class="reference external" href="https://github.com/gdaneek/shls-project/actions/workflows/docs.yml"><img alt="Docs" src="https://github.com/gdaneek/shls-project/actions/workflows/docs.yml/badge.svg" /></a></p>
+<p><img alt="C++20" src="https://img.shields.io/badge/Code-C%2B%2B20-8E54E9?style=flat&amp;labelColor=333a41" />
+<img alt="Drogon" src="https://img.shields.io/badge/Backend-Drogon-7A3DE1?style=flat&amp;labelColor=333a41" />
+<img alt="PostgreSQL" src="https://img.shields.io/badge/Data-PostgreSQL-4169E1?style=flat&amp;labelColor=333a41" />
+<img alt="Redis + RabbitMQ" src="https://img.shields.io/badge/Infra-Redis%20%2B%20RabbitMQ-FF6600?style=flat&amp;labelColor=333a41" /></p>
+<p>Mini Checkers — веб-приложение для игры в шашки вдвоём: создайте партию,
+подключите второго игрока и делайте ходы в браузере.</p>
+<p>Документация проекта: <a class="reference external" href="https://gdaneek.github.io/shls/">GitHub Pages</a>.</p>
+<section id="id1">
+<h2>Возможности<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h2>
+<ul class="simple">
+<li><p>Создание партии и подключение соперника по её ID.</p></li>
+<li><p>Обязательные взятия, цепочки взятий, дамки и автоматическое определение победителя.</p></li>
+<li><p>Режим зрителя и автоматическое обновление доски.</p></li>
+<li><p>Сохранение партий и резервное копирование данных.</p></li>
+</ul>
+</section>
+<section id="id2">
+<h2>Сборка и запуск<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<p>Для приведённых команд нужны Linux, Docker Engine с Docker Compose v2, <code class="docutils literal notranslate"><span class="pre">nftables</span></code>, <code class="docutils literal notranslate"><span class="pre">sudo</span></code> и <code class="docutils literal notranslate"><span class="pre">openssl</span></code>. Все зависимости приложения и C++-код собираются внутри Docker — устанавливать компилятор отдельно не нужно.</p>
+<p>Из корня репозитория:</p>
+<ol class="arabic">
+<li><p>Создайте конфигурацию, <strong>только если <code class="docutils literal notranslate"><span class="pre">.env</span></code> ещё нет</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cp<span class="w"> </span>.env.example<span class="w"> </span>.env
+chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>.env
+</pre></div>
+</div>
+</li>
+<li><p>Откройте <code class="docutils literal notranslate"><span class="pre">.env</span></code> и замените значения-заглушки:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">POSTGRES_PASSWORD</span></code> и <code class="docutils literal notranslate"><span class="pre">RABBITMQ_PASSWORD</span></code> — свои пароли;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POSTGRES_REPLICATION_PASSWORD</span></code> и <code class="docutils literal notranslate"><span class="pre">RABBITMQ_ERLANG_COOKIE</span></code> — для каждого сгенерируйте отдельное значение командой <code class="docutils literal notranslate"><span class="pre">openssl</span> <span class="pre">rand</span> <span class="pre">-hex</span> <span class="pre">32</span></code>.</p></li>
+</ul>
+</li>
+<li><p>Соберите и запустите приложение:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>infra/firewall/firewall.sh<span class="w"> </span>apply
+docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>--build<span class="w"> </span>-d<span class="w"> </span>--wait<span class="w"> </span>--wait-timeout<span class="w"> </span><span class="m">240</span>
+</pre></div>
+</div>
+<p>Первая сборка может занять несколько минут. После перезагрузки компьютера правила firewall нужно применить заново.</p>
+</li>
+<li><p>Откройте <strong>http://127.0.0.1:8000/</strong>. Другой порт можно задать через <code class="docutils literal notranslate"><span class="pre">API_PORT</span></code> в <code class="docutils literal notranslate"><span class="pre">.env</span></code>.</p></li>
+</ol>
+</section>
+<section id="id3">
+<h2>Как играть<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<ol class="arabic simple">
+<li><p>Нажмите <strong>«Создать игру»</strong> — вы играете белыми. Скопируйте ID партии.</p></li>
+<li><p>Нажмите <strong>«Вторая вкладка»</strong>, вставьте ID и выберите <strong>«Присоединиться»</strong> — это чёрные. Для игры с другим человеком передайте ему ID; сайт по умолчанию доступен только с вашего компьютера.</p></li>
+<li><p>Выберите шашку и затем подсвеченную клетку. Подключение соперника и ходы появляются автоматически; при необходимости нажмите <strong>«Обновить»</strong>.</p></li>
+<li><p><strong>«Сдаться»</strong> завершает партию. <strong>«Смотреть»</strong> открывает игру без занятия места.</p></li>
+</ol>
+<p>Ключ игрока хранится только в своей вкладке и переживает её перезагрузку. Не закрывайте вкладку до конца игры; для второго игрока используйте «Вторая вкладка», а не дублирование первой.</p>
+<p>Взятие обязательно в обе стороны. Продолжайте бой той же шашкой, пока есть взятия. На последнем ряду шашка становится дамкой (Д), в том числе во время боя; дамка ходит и бьёт по всей диагонали. Побитые фигуры отмечаются крестиком и снимаются после всей цепочки. Победа определяется автоматически, когда у соперника нет фигур или ходов. Часы и спортивные правила ничьих не реализованы.</p>
+</section>
+<section id="id4">
+<h2>Управление приложением<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>ps<span class="w">          </span><span class="c1"># состояние компонентов</span>
+docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>-f<span class="w">     </span><span class="c1"># просмотр журналов; Ctrl+C завершает просмотр</span>
+docker<span class="w"> </span>compose<span class="w"> </span>down<span class="w">        </span><span class="c1"># остановка с сохранением данных</span>
+</pre></div>
+</div>
+<p>Для повторного запуска или пересборки используйте команду <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">up</span> <span class="pre">--build</span> <span class="pre">-d</span> <span class="pre">--wait</span> <span class="pre">--wait-timeout</span> <span class="pre">240</span></code>. Не удаляйте Docker-тома, если хотите сохранить партии.</p>
+<p>Для обновления установки с одним RabbitMQ используйте <code class="docutils literal notranslate"><span class="pre">infra/rabbitmq/upgrade-rabbitmq.sh</span></code> (нужен <code class="docutils literal notranslate"><span class="pre">jq</span></code>): он переносит существующий cookie и дожидается обработки старой очереди. Выполняйте обновление без активной игры.</p>
+</section>
+<section id="id5">
+<h2>Резервные копии<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>infra/backups/backup.sh<span class="w">                      </span><span class="c1"># создать архив БД в backups/</span>
+infra/backups/restore.sh<span class="w"> </span>backups/&lt;имя&gt;.dump<span class="w">   </span><span class="c1"># восстановить в новую тестовую БД</span>
+infra/backups/backup-timer.sh<span class="w"> </span>install<span class="w">        </span><span class="c1"># ежедневный бэкап в 02:00, systemd user timer</span>
+infra/backups/backup-timer.sh<span class="w"> </span>remove<span class="w">         </span><span class="c1"># отключить расписание</span>
+</pre></div>
+</div>
+<p>Архивы старше 7 дней удаляются после успешного нового бэкапа. Восстановление создаёт отдельную проверочную БД и не заменяет рабочие партии. Для расписания нужен работающий пользовательский <code class="docutils literal notranslate"><span class="pre">systemd</span></code>; состояние — <code class="docutils literal notranslate"><span class="pre">infra/backups/backup-timer.sh</span> <span class="pre">status</span></code>.</p>
+</section>
+<section id="id6">
+<h2>Лицензия<a class="headerlink" href="#id6" title="Ссылка на этот заголовок"></a></h2>
+<p>Проект открытый и распространяется под лицензией <a class="reference external" href="https://github.com/gdaneek/shls/blob/dev/LICENSE">MIT</a>.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Архитектура проекта</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="architecture/overview.html">Архитектура и компоненты</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture/overview.html#c1">C1: контекст</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/overview.html#c2">C2: контейнеры</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/overview.html#id2">Где реализовано</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="development/api.html">Игра и HTTP API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development/api.html#id1">Контракт</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/api.html#id2">Правила и состояние клиента</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/api.html#id3">Ошибки и повторы</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="architecture/storage.html">PostgreSQL и кеш</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture/storage.html#id1">Схема и владение данными</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/storage.html#id2">Атомарная запись</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/storage.html#cache-aside">Cache-aside</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="architecture/events.html">События, outbox и worker</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture/events.html#id1">Путь события</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/events.html#id2">Сообщение и очередь</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/events.html#id3">Гарантии и ограничения</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="architecture/security.html">Сегментация и firewall</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture/security.html#id1">Сети и правила</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/security.html#id2">Границы доверия и потеря связи</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/security.html#id3">Прикладные ограничения доступа</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="architecture/reliability.html">Надёжность и резервные копии</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture/reliability.html#id2">Изоляция отказов</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/reliability.html#postgresql-primary-standby">PostgreSQL: primary и standby</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/reliability.html#rabbitmq-quorum">RabbitMQ: quorum и переподключение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/reliability.html#id3">Политика резервного копирования</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="architecture/service-levels.html">Уровень обслуживания и наблюдаемость</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture/service-levels.html#sla-sli-slo">SLA, SLI и SLO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/service-levels.html#id2">Результаты измерений</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/service-levels.html#id3">Качество чтения и доставки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/service-levels.html#mtbf-mttr">MTBF и MTTR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/service-levels.html#rto-rpo">RTO и RPO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/service-levels.html#id4">Наблюдаемость</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/library_root.html">Документация API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/library_root.html#class-hierarchy">Class Hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/library_root.html#file-hierarchy">File Hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/library_root.html#id1">Все сущности</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="architecture/overview.html" class="btn btn-neutral float-right" title="Архитектура и компоненты" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права . </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

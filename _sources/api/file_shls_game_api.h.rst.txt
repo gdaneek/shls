@@ -1,0 +1,79 @@
+
+.. _file_shls_game_api.h:
+
+File game_api.h
+===============
+
+|exhale_lsh| :ref:`Parent directory <dir_shls>` (``shls``)
+
+.. |exhale_lsh| unicode:: U+021B0 .. UPWARDS ARROW WITH TIP LEFTWARDS
+
+
+
+HTTP-обработчики игры с хранением в PostgreSQL и кешем Redis. 
+
+
+
+.. contents:: Содержание
+   :local:
+   :backlinks: none
+
+Definition (``shls/game_api.h``)
+--------------------------------
+
+
+.. toctree::
+   :maxdepth: 1
+
+   program_listing_file_shls_game_api.h.rst
+
+
+
+Detailed Description
+--------------------
+
+Объявляет регистрацию маршрутов и асинхронные операции над партиями. 
+
+
+
+
+Includes
+--------
+
+
+- ``drogon/HttpRequest.h``
+
+- ``drogon/HttpResponse.h``
+
+- ``drogon/nosql/RedisClient.h``
+
+- ``drogon/orm/DbClient.h``
+
+- ``drogon/utils/coroutine.h``
+
+- ``json/value.h``
+
+- ``optional``
+
+- ``shls/game_rules.h`` (:ref:`file_shls_game_rules.h`)
+
+- ``string``
+
+
+
+
+
+
+Namespaces
+----------
+
+
+- :ref:`namespace_mini_checkers`
+
+
+Classes
+-------
+
+
+- :ref:`exhale_class_classmini__checkers_1_1GameApi`
+

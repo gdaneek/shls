@@ -1,0 +1,16 @@
+.. _exhale_class_classmini__checkers_1_1GameApi:
+
+Class GameApi
+=============
+
+- Defined in :ref:`file_shls_game_api.h`
+
+
+Class Documentation
+-------------------
+
+
+.. doxygenclass:: mini_checkers::GameApi
+   :project: Mini Checkers
+   :members:
+   :private-members:

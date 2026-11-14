@@ -1,0 +1,216 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Архитектура и компоненты &mdash; Mini Checkers — документация</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/collapsible-lists/css/tree_view.css?v=a885cde7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f5f217e7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=372fde1a"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/translations.js?v=cd1d70c9"></script>
+      <script src="../_static/collapsible-lists/js/CollapsibleLists.compressed.js?v=73120307"></script>
+      <script src="../_static/collapsible-lists/js/apply-collapsible-lists.js?v=660e4f45"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../genindex.html" />
+    <link rel="search" title="Поиск" href="../search.html" />
+    <link rel="next" title="Игра и HTTP API" href="../development/api.html" />
+    <link rel="prev" title="Mini Checkers" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mini Checkers
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Архитектура проекта</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Архитектура и компоненты</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#c1">C1: контекст</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#c2">C2: контейнеры</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Где реализовано</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../development/api.html">Игра и HTTP API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage.html">PostgreSQL и кеш</a></li>
+<li class="toctree-l1"><a class="reference internal" href="events.html">События, outbox и worker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Сегментация и firewall</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reliability.html">Надёжность и резервные копии</a></li>
+<li class="toctree-l1"><a class="reference internal" href="service-levels.html">Уровень обслуживания и наблюдаемость</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/library_root.html">Документация API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Mini Checkers</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Архитектура и компоненты</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/architecture/overview.md.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="id1">
+<h1>Архитектура и компоненты<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h1>
+<p>Mini Checkers — веб-приложение для игры в шашки вдвоём. API сохраняет
+состояние партии, Redis ускоряет чтение, а отдельный worker обрабатывает
+игровые события асинхронно.</p>
+<section id="c1">
+<h2>C1: контекст<a class="headerlink" href="#c1" title="Ссылка на этот заголовок"></a></h2>
+<div class="graphviz"><object data="../_images/graphviz-211beb8337d4e7ce187b84bb8f29d1b44d52998d.svg" type="image/svg+xml" class="graphviz">
+<p class="warning">Два игрока и зритель взаимодействуют с Mini Checkers</p></object></div>
+<p>Игрок получает секретный токен своей стороны; зритель читает партию по ID.
+Регистрации пользователей нет. Браузер и HTTP-клиент используют один API.</p>
+</section>
+<section id="c2">
+<h2>C2: контейнеры<a class="headerlink" href="#c2" title="Ссылка на этот заголовок"></a></h2>
+<div class="graphviz"><object data="../_images/graphviz-83de8a6961826e4a40c30cd3f964a4e2002f353d.svg" type="image/svg+xml" class="graphviz">
+<p class="warning">Frontend, Game API, PostgreSQL, Redis, RabbitMQ и Event Worker в трёх сетях</p></object></div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Компонент</p></th>
+<th class="head"><p>Ответственность</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">frontend</span></code></p></td>
+<td><p>Nginx отдаёт HTML/CSS/JS и проксирует <code class="docutils literal notranslate"><span class="pre">/api/</span></code> в Game API. Единственный опубликованный порт: <code class="docutils literal notranslate"><span class="pre">127.0.0.1:${API_PORT:-8000}</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">game-api</span></code></p></td>
+<td><p>C++20/Drogon: правила, авторизация, SQL, Redis и фоновая публикация событий. Единственный прикладной владелец игровых таблиц.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">event-worker</span></code></p></td>
+<td><p>Отдельный C++20-процесс: получает событие, пишет JSON-лог, подтверждает обработку. Не обращается к БД или кешу.</p></td>
+</tr>
+<tr class="row-odd"><td><p>PostgreSQL 17</p></td>
+<td><p>Источник истины; два узла с отдельными томами, primary и асинхронный standby.</p></td>
+</tr>
+<tr class="row-even"><td><p>Redis</p></td>
+<td><p>Восстанавливаемый кеш состояния с TTL.</p></td>
+</tr>
+<tr class="row-odd"><td><p>RabbitMQ</p></td>
+<td><p>Три узла, реплицированная quorum-очередь событий.</p></td>
+</tr>
+</tbody>
+</table>
+<p>В обычном стеке девять контейнеров. <code class="docutils literal notranslate"><span class="pre">postgres-maintenance</span></code> из профиля <code class="docutils literal notranslate"><span class="pre">tools</span></code>
+запускается отдельно для обслуживания БД. API подключается только к выбранному
+primary; после переключения роли узлов могут поменяться.</p>
+<p>Frontend, API и worker запускаются независимо. Обработка события отделена
+от игрового запроса: остановка worker задерживает логирование, но не запись
+партии. Общей транзакции между PostgreSQL, Redis и RabbitMQ нет — для доставки
+используется <a class="reference internal" href="events.html"><span class="std std-doc">outbox</span></a>.</p>
+</section>
+<section id="id2">
+<h2>Где реализовано<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Путь</p></th>
+<th class="head"><p>Содержимое</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">frontend/</span></code></p></td>
+<td><p>Интерфейс и Nginx; опрос API раз в 2 с, остановка в скрытой вкладке, задержка повтора до 30 с при ошибке.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">src/game-api/main.cc</span></code></p></td>
+<td><p>Клиенты БД/кеша, применение схемы, health, запуск HTTP и publisher.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">src/game-api/game_api.cc</span></code></p></td>
+<td><p>Обработчики HTTP и запросы SQL/Redis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">src/game-api/game_rules.cc</span></code></p></td>
+<td><p>Правила без зависимости от HTTP и хранилищ.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">src/game-api/event_publisher.cc</span></code></p></td>
+<td><p>Чтение outbox и публикация с confirm.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">src/event-worker/main.cc</span></code></p></td>
+<td><p>Consumer, ACK, переподключение и heartbeat.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">shls/</span></code></p></td>
+<td><p>Публичные заголовки C++.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">infra/</span></code></p></td>
+<td><p>Схема, firewall, репликация и backup.</p></td>
+</tr>
+</tbody>
+</table>
+<p>HTTP-путь использует корутины Drogon; блокирующий AMQP-клиент <code class="docutils literal notranslate"><span class="pre">rabbitmq-c</span></code>
+работает в отдельном потоке. CMake закрепляет версии зависимостей,
+многостадийный Dockerfile отделяет сборку от runtime-образа.
+Показатели качества и границы гарантий — в <a class="reference internal" href="service-levels.html"><span class="std std-doc">уровне обслуживания</span></a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Mini Checkers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="../development/api.html" class="btn btn-neutral float-right" title="Игра и HTTP API" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права . </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
