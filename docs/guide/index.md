@@ -12,4 +12,5 @@ architecture/events
 architecture/security
 architecture/reliability
 architecture/service-levels
+api/library_root
 ```

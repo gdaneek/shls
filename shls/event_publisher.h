@@ -1,3 +1,9 @@
+/**
+ * @file
+ * @brief Фоновая доставка событий из транзакционного outbox в RabbitMQ.
+ * @details Блокирующие операции rabbitmq-c выполняются в собственном потоке,
+ * отдельно от HTTP-обработчиков.
+ */
 #pragma once
 
 #include <drogon/nosql/RedisClient.h>
@@ -9,56 +15,135 @@
 #include <string>
 #include <thread>
 
+/// @brief Непрозрачный тип соединения, определённый в rabbitmq-c.
 struct amqp_connection_state_t_;
 
 namespace mini_checkers {
 
-// Publishes game events to a durable RabbitMQ queue. rabbitmq-c is blocking,
-// so a dedicated thread drains the PostgreSQL outbox. A row is deleted only
-// after a publisher confirm. A crash may cause redelivery, but not loss of
-// committed events. This prototype runs one publisher (one API instance).
+/**
+ * @brief Доставляет события outbox в отдельном потоке и удаляет их после подтверждения брокера.
+ * @details Читает события по sequence, повторяет инвалидацию кеша и отправляет
+ * persistent-сообщения в кворумную очередь. Строка outbox удаляется после ACK брокера.
+ * @note Рассчитан на одного издателя для общей таблицы outbox. Сбой между
+ * подтверждением публикации и удалением строки может привести к повторной доставке.
+ */
 class EventPublisher {
  public:
+  /**
+   * @brief Настройки подключения к брокеру и долговечной очереди.
+   * @note Адреса перечисляются без пробелов и пустых элементов. Все брокеры
+   * используют один порт, учётные данные и виртуальный хост /.
+   */
   struct Config {
-    std::string host;  // Comma-separated broker addresses, tried in rotation.
-    int port = 5672;
-    std::string user;
-    std::string password;
-    std::string queue;
+    std::string host; ///< Адреса брокеров через запятую для циклического перебора.
+    int port = 5672; ///< TCP-порт AMQP.
+    std::string user; ///< Имя пользователя брокера.
+    std::string password; ///< Пароль брокера.
+    std::string queue; ///< Имя долговечной кворумной очереди.
   };
 
+  /**
+   * @brief Задаёт настройки брокера и клиенты хранилищ без запуска потока.
+   * @param[in] config Настройки подключения и имя кворумной очереди.
+   * @param[in] db Ненулевой клиент PostgreSQL с доступом к outbox_events.
+   * @param[in] redis Клиент Redis для инвалидации кеша; может быть nullptr.
+   * @note Подключение к брокеру выполняется после Start(), а не в конструкторе.
+   */
   EventPublisher(Config config, drogon::orm::DbClientPtr db,
                  drogon::nosql::RedisClientPtr redis);
+
+  /**
+   * @brief Останавливает поток и ждёт его завершения, оставляя недоставленные события в outbox.
+   * @note Прерывает ожидание повтора, но не текущую блокирующую операцию.
+   * Не пытается опустошить outbox; не должен вызываться из потока издателя.
+   */
   ~EventPublisher();
 
-  EventPublisher(const EventPublisher&) = delete;
-  EventPublisher& operator=(const EventPublisher&) = delete;
+  /**
+   * @brief Запрещает копирование владельца потока и соединения.
+   * @param[in] other Объект-источник; копирование недоступно.
+   */
+  EventPublisher(const EventPublisher& other) = delete;
+  /**
+   * @brief Запрещает присваивание владельцу потока и соединения.
+   * @param[in] other Объект-источник; присваивание недоступно.
+   */
+  EventPublisher& operator=(const EventPublisher& other) = delete;
 
-  // Start only after the schema has been created.
+  /**
+   * @brief Запускает поток публикации; вызывается один раз после создания схемы.
+   * @pre Таблица outbox_events создана; поток ещё не запускался.
+   * @throws std::system_error Если операционная система не смогла создать поток.
+   * @note Возвращается без ожидания подключения к RabbitMQ или доставки событий.
+   * Повторный вызов для работающего потока недопустим.
+   */
   void Start();
 
  private:
+  /**
+   * @brief Данные outbox для одной публикации в AMQP.
+   * @note event_id сохраняется при повторах и передаётся как AMQP message_id;
+   * type передаётся отдельным свойством, body — телом сообщения.
+   */
   struct Message {
-    std::string type;
-    std::string event_id;
-    std::string body;
+    std::string type; ///< Тип игрового события.
+    std::string event_id; ///< Постоянный идентификатор для сопоставления повторных доставок.
+    std::string body; ///< Событие в виде JSON-строки.
   };
 
+  /**
+   * @brief Публикует outbox по порядку, повторяя неудачные попытки до остановки.
+   * @details При отсутствии событий или ошибке делает паузу перед следующим
+   * чтением. После запроса остановки закрывает соединение.
+   * @note Ошибка инвалидации Redis не блокирует публикацию. SQL-ошибки
+   * и ошибки доставки оставляют событие в outbox для следующей попытки.
+   */
   void Run();
+
+  /**
+   * @brief Подключается к следующему брокеру и настраивает очередь и подтверждения.
+   * @pre Активного соединения нет; вызывается только из потока издателя.
+   * @return true при готовности соединения, очереди и publisher confirms;
+   * false при ошибке подключения, входа или настройки.
+   * @note Одна попытка проверяет один адрес. Следующая попытка использует
+   * следующий адрес списка; при ошибке созданное соединение освобождается.
+   */
   bool Connect();
+
+  /**
+   * @brief Освобождает текущее AMQP-соединение, если оно существует.
+   * @note Вызывается из потока издателя; повторный вызов безопасен.
+   * Не удаляет очередь брокера и строки outbox.
+   */
   void Disconnect();
+
+  /**
+   * @brief Публикует сохраняемое событие и возвращает признак подтверждения брокером.
+   * @param[in] message Событие с типом, постоянным идентификатором и JSON-телом.
+   * @pre Connect() успешно завершён; вызов выполняется из потока издателя.
+   * @return true только после ACK брокера; false при ошибке, таймауте или NACK.
+   * @note Использует обменник по умолчанию и имя очереди как ключ маршрутизации.
+   * Подтверждение брокера не означает обработку потребителем; false не исключает
+   * фактическую доставку, если подтверждение было потеряно.
+   */
   bool Send(const Message& message);
+
+  /**
+   * @brief Ждёт окончания задержки перед повтором или уведомления об остановке.
+   * @note Ожидает до одной секунды с проверкой флага stopping_. Условная
+   * переменная позволяет деструктору прервать паузу без ожидания всего интервала.
+   */
   void WaitBeforeRetry();
 
-  Config config_;
-  drogon::orm::DbClientPtr db_;
-  drogon::nosql::RedisClientPtr redis_;
-  std::mutex mutex_;
-  std::condition_variable cv_;
-  bool stopping_ = false;
-  amqp_connection_state_t_* connection_ = nullptr;
-  std::size_t next_host_ = 0;
-  std::thread thread_;
+  Config config_; ///< Настройки брокера.
+  drogon::orm::DbClientPtr db_; ///< Долговечное хранилище outbox.
+  drogon::nosql::RedisClientPtr redis_; ///< Необязательный клиент инвалидации кеша.
+  std::mutex mutex_; ///< Защищает флаг остановки.
+  std::condition_variable cv_; ///< Прерывает ожидание повтора при остановке.
+  bool stopping_ = false; ///< Запрос остановки под защитой mutex_.
+  amqp_connection_state_t_* connection_ = nullptr; ///< Соединение издателя событий.
+  std::size_t next_host_ = 0; ///< Смещение следующего адреса в списке брокеров.
+  std::thread thread_; ///< Поток блокирующих операций с outbox и AMQP.
 };
 
 }  // namespace mini_checkers

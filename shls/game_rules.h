@@ -1,3 +1,9 @@
+/**
+ * @file
+ * @brief Типы доски и правила ходов в русских шашках.
+ * @details Операции над позицией не обращаются к БД или сети.
+ * Один вызов применения хода выполняет тихий ход либо одно взятие.
+ */
 #pragma once
 
 #include <optional>
@@ -5,59 +11,160 @@
 #include <string_view>
 #include <vector>
 
+/// @brief Правила игры, HTTP-обработчики и доставка событий.
 namespace mini_checkers {
 
-// The board is stored as 64 characters, row by row from row 0 (black's side)
-// to row 7 (white's side).
+/// @brief Ширина и высота доски в клетках.
 inline constexpr int kBoardSize = 8;
+/// @brief Обозначение пустой клетки в строке доски.
 inline constexpr char kEmptyCell = '.';
+/// @brief Обозначение белой шашки.
 inline constexpr char kWhitePiece = 'w';
+/// @brief Обозначение чёрной шашки.
 inline constexpr char kBlackPiece = 'b';
+/// @brief Обозначение белой дамки.
 inline constexpr char kWhiteKing = 'W';
+/// @brief Обозначение чёрной дамки.
 inline constexpr char kBlackKing = 'B';
 
-enum class Side { kWhite, kBlack };
-
-struct Cell {
-  int row = 0;
-  int col = 0;
-  bool operator==(const Cell&) const = default;
+/// @brief Сторона игрока; первыми ходят белые.
+enum class Side {
+  kWhite, ///< Белые.
+  kBlack  ///< Чёрные.
 };
 
+/**
+ * @brief Координаты клетки с нумерацией от нуля.
+ * @note Допустимые значения обеих координат — от 0 до 7.
+ */
+struct Cell {
+  int row = 0; ///< Строка от 0 (сторона чёрных) до 7 (сторона белых).
+  int col = 0; ///< Столбец от 0 до 7.
+  /**
+   * @brief Сравнивает обе координаты.
+   * @param[in] other Клетка для сравнения.
+   * @return true, если строки и столбцы совпадают.
+   */
+  bool operator==(const Cell& other) const = default;
+};
+
+/**
+ * @brief Состояние доски и хода, включая незавершённую цепочку взятий.
+ * @details Доска содержит 64 символа: '.', 'w', 'b', 'W', 'B'.
+ * Во время цепочки взятий очередь остаётся у бьющей стороны, а побитые
+ * фигуры сохраняются на доске до завершения всего хода.
+ * @note capture_from и элементы captured — построчные индексы от 0 до 63;
+ * значение capture_from = -1 означает отсутствие продолжения боя.
+ */
 struct Position {
-  std::string board;
-  Side turn = Side::kWhite;
-  int capture_from = -1;
-  // Captured pieces remain on the board as blockers until the turn ends.
+  std::string board; ///< 64 обозначения клеток, расположенные построчно.
+  Side turn = Side::kWhite; ///< Сторона, выполняющая следующий ход.
+  int capture_from = -1; ///< Индекс бьющей фигуры или -1 для нового хода.
+  /// @brief Индексы побитых фигур, блокирующих клетки до конца хода.
   std::vector<int> captured;
 };
 
+/**
+ * @brief Один тихий ход или одно звено цепочки взятий.
+ * @note При взятии captured_cell указывает на жертву, а не на клетку приземления.
+ */
 struct Move {
-  Cell from;
-  Cell to;
-  int captured_cell = -1;
+  Cell from; ///< Исходная клетка.
+  Cell to; ///< Конечная клетка.
+  int captured_cell = -1; ///< Индекс побитой фигуры или -1 для тихого хода.
 };
 
+/**
+ * @brief Обновлённая позиция и результат одного участка хода.
+ * @note При продолжении боя position.turn не меняется, а winner остаётся пустым.
+ */
 struct MoveResult {
-  Position position;
-  int captured_cell = -1;
-  bool promoted = false;
-  std::optional<Side> winner;
+  Position position; ///< Позиция после хода.
+  int captured_cell = -1; ///< Индекс побитой фигуры или -1 для тихого хода.
+  bool promoted = false; ///< Превратилась ли ходящая шашка в дамку.
+  std::optional<Side> winner; ///< Победитель, если у соперника нет допустимых ходов.
 };
 
+/**
+ * @brief Возвращает название стороны для API: "white" или "black".
+ * @param[in] side Сторона игрока.
+ * @return Представление строкового литерала со статическим временем жизни.
+ */
 std::string_view SideName(Side side);
+
+/**
+ * @brief Разбирает название стороны из API; возвращает nullopt для неизвестного.
+ * @param[in] name Название "white" или "black" с учётом регистра.
+ * @return Сторона игрока либо std::nullopt при несовпадении.
+ */
 std::optional<Side> ParseSide(std::string_view name);
+
+/**
+ * @brief Возвращает сторону соперника.
+ * @param[in] side Исходная сторона игрока.
+ * @return Чёрные для белых и белые для чёрных.
+ */
 Side Opponent(Side side);
 
+/**
+ * @brief Преобразует координаты в построчный индекс без проверки границ.
+ * @param[in] cell Координаты клетки.
+ * @pre Обе координаты находятся в диапазоне 0–7.
+ * @return Индекс row * 8 + col в диапазоне 0–63.
+ */
 int CellIndex(Cell cell);
+
+/**
+ * @brief Создаёт начальную доску с двенадцатью шашками каждой стороны.
+ * @return Строка из 64 символов: чёрные в строках 0–2, белые в строках 5–7.
+ * @note Фигуры занимают только тёмные клетки; остальные клетки пусты.
+ */
 std::string InitialBoard();
 
-// Russian checkers: mandatory captures, flying kings, immediate promotion,
-// and continuation by the same piece. Each request performs one leg.
+/**
+ * @brief Возвращает допустимые участки ходов с учётом обязательного взятия и продолжения боя.
+ * @param[in] position Текущая позиция и состояние цепочки взятий.
+ * @return Список ходов стороны position.turn; пустой при отсутствии ходов
+ * или длине доски, отличной от 64.
+ * @note При наличии взятий тихие ходы исключаются. В цепочке боя разрешены
+ * только взятия фигурой из capture_from; дамки ходят по всей диагонали.
+ */
 std::vector<Move> LegalMoves(const Position& position);
+
+/**
+ * @brief Возвращает ошибку проверки хода или nullopt, если ход допустим.
+ * @param[in] position Позиция перед ходом.
+ * @param[in] from Исходная клетка.
+ * @param[in] to Клетка назначения.
+ * @return std::nullopt при успехе либо текст первой обнаруженной ошибки.
+ * @note Проверяет границы, принадлежность фигуры, свободную цель и правила
+ * взятия. Позиция не изменяется; текст ошибки имеет статическое время жизни.
+ */
 std::optional<std::string_view> ValidateMove(const Position& position,
                                            Cell from, Cell to);
+
+/**
+ * @brief Применяет участок хода, превращает шашку в дамку и определяет завершение партии.
+ * @param[in] position Исходная позиция, передаваемая по значению.
+ * @param[in] from Исходная клетка ходящей фигуры.
+ * @param[in] to Клетка назначения.
+ * @return Новая позиция, сведения о взятии и превращении, возможный победитель.
+ * @pre Индексы уже побитых фигур в position.captured корректны.
+ * @throws std::invalid_argument Если ход недопустим.
+ * @note Превращение действует немедленно, в том числе внутри цепочки боя.
+ * Очередь меняется и побитые фигуры снимаются только после завершения хода.
+ * Победитель определяется по отсутствию допустимых ходов у соперника.
+ */
 MoveResult ApplyMove(Position position, Cell from, Cell to);
+
+/**
+ * @brief Удаляет побитые фигуры и сбрасывает состояние продолжения боя.
+ * @param[in,out] position Позиция, в которой очищаются побитые клетки,
+ * список captured и индекс capture_from.
+ * @throws std::out_of_range Если индекс из captured выходит за пределы board.
+ * @note Не меняет очередь хода. При ошибочном индексе часть клеток уже может
+ * быть очищена; вызывающий код должен передавать согласованную позицию.
+ */
 void ClearCapturedPieces(Position& position);
 
 }  // namespace mini_checkers
