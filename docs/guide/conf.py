@@ -12,7 +12,7 @@ project = "Mini Checkers"
 author = "Mini Checkers"
 language = "ru"
 
-extensions = ["myst_parser", "sphinx.ext.graphviz", "breathe", "exhale"]
+extensions = ["myst_parser", "sphinx.ext.graphviz", "sphinx.ext.githubpages", "breathe", "exhale"]
 source_suffix = {".md": "markdown", ".rst": "restructuredtext"}
 primary_domain = "cpp"
 root_doc = "index"

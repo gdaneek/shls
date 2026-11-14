@@ -9,4 +9,4 @@
 - Asynchronous game events with a transactional outbox and a three-node RabbitMQ cluster.
 - Docker Compose deployment, network segmentation, and nftables firewall rules.
 - PostgreSQL replication, manual failover, and scheduled backups with restore tools.
-- Automated tests, CI, architecture and generated C++ API documentation, and MIT license.
+- Automated tests, CI, architecture and generated C++ API documentation on GitHub Pages, and MIT license.

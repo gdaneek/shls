@@ -23,6 +23,7 @@ def main():
 
     return build_main([
         "-b", "html", "-n", "-W", "--keep-going", "-E", "-a",
+        "-d", str(output / "doctrees"),
         "-c", str(guide), str(staged_guide), str(html),
     ])
 
