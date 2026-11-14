@@ -1,0 +1,292 @@
+name: mini-checkers
+
+services:
+  frontend:
+    build: ./frontend
+    image: mini-checkers-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8080"
+    networks:
+      public:
+        ipv4_address: 10.10.1.3
+    depends_on:
+      game-api:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  game-api:
+    restart: unless-stopped
+    stop_grace_period: 30s
+    build:
+      context: .
+      target: game-api
+    image: mini-checkers-game-api:latest
+    environment:
+      POSTGRES_HOST: ${POSTGRES_PRIMARY_HOST:-postgres}
+      POSTGRES_DB: mini_checkers
+      POSTGRES_USER: mini_checkers
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      REDIS_HOST: redis
+      CACHE_TTL_SECONDS: 60
+      RABBITMQ_HOST: rabbitmq,rabbitmq-2,rabbitmq-3
+      RABBITMQ_USER: mini_checkers
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
+      EVENTS_QUEUE: game.events.quorum
+    networks:
+      public:
+        ipv4_address: 10.10.1.2
+      data:
+        ipv4_address: 10.10.2.2
+      messaging:
+        ipv4_address: 10.10.3.2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres-standby:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      rabbitmq-2:
+        condition: service_healthy
+      rabbitmq-3:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--max-time", "6", "http://127.0.0.1:8000/health/ready"]
+      interval: 10s
+      timeout: 7s
+      start_period: 30s
+      retries: 5
+
+  event-worker:
+    restart: unless-stopped
+    stop_grace_period: 20s
+    build:
+      context: .
+      target: event-worker
+    image: mini-checkers-event-worker:latest
+    environment:
+      RABBITMQ_HOST: rabbitmq,rabbitmq-2,rabbitmq-3
+      RABBITMQ_USER: mini_checkers
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
+      EVENTS_QUEUE: game.events.quorum
+    networks:
+      messaging:
+        ipv4_address: 10.10.3.4
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      rabbitmq-2:
+        condition: service_healthy
+      rabbitmq-3:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/event-worker", "--healthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  postgres:
+    restart: unless-stopped
+    stop_grace_period: 30s
+    build: ./infra/postgres
+    image: mini-checkers-postgres:latest
+    environment: &postgres-environment
+      POSTGRES_DB: mini_checkers
+      POSTGRES_USER: mini_checkers
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD:?set POSTGRES_REPLICATION_PASSWORD in .env (openssl rand -hex 32)}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      data:
+        ipv4_address: 10.10.2.3
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "mini_checkers", "-d", "mini_checkers"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-standby:
+    build: ./infra/postgres
+    image: mini-checkers-postgres:latest
+    restart: unless-stopped
+    stop_grace_period: 30s
+    environment:
+      <<: *postgres-environment
+      PGDATA: /var/lib/postgresql/data/cluster
+      POSTGRES_STANDBY_HOST: postgres
+    volumes:
+      - postgres-standby-data:/var/lib/postgresql/data
+    networks:
+      data:
+        ipv4_address: 10.10.2.5
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "mini_checkers", "-d", "mini_checkers"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  # Explicit one-off administration job, not started by a normal compose up.
+  postgres-maintenance:
+    profiles: [tools]
+    build: ./infra/postgres
+    image: mini-checkers-postgres:latest
+    entrypoint: ["/usr/local/bin/postgres-maintenance.sh"]
+    user: postgres
+    environment: *postgres-environment
+    volumes:
+      - postgres-data:/data/postgres
+      - postgres-standby-data:/data/postgres-standby
+    networks:
+      data:
+        ipv4_address: 10.10.2.6
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  redis:
+    restart: unless-stopped
+    image: redis:7.4-bookworm
+    # Cache only: PostgreSQL is the source of truth, so no persistence.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    networks:
+      data:
+        ipv4_address: 10.10.2.4
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  rabbitmq:
+    restart: unless-stopped
+    stop_grace_period: 30s
+    build: ./infra/rabbitmq
+    image: mini-checkers-rabbitmq:latest
+    # A fixed node name keeps the data in the volume usable after recreation.
+    hostname: rabbitmq
+    environment: &rabbitmq-environment
+      RABBITMQ_DEFAULT_USER: mini_checkers
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:?set RABBITMQ_ERLANG_COOKIE in .env (openssl rand -hex 32); reuse existing node cookie on upgrade}
+      # Bound Erlang scheduler threads on a developer machine.
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "+S 2:2"
+      RABBITMQ_CTL_ERL_ARGS: "+S 1:1"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      messaging:
+        ipv4_address: 10.10.3.3
+    healthcheck: &rabbitmq-healthcheck
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 10s
+      start_period: 30s
+      retries: 10
+
+  rabbitmq-2:
+    build: ./infra/rabbitmq
+    image: mini-checkers-rabbitmq:latest
+    hostname: rabbitmq-2
+    restart: unless-stopped
+    stop_grace_period: 30s
+    environment: *rabbitmq-environment
+    volumes:
+      - rabbitmq-2-data:/var/lib/rabbitmq
+    networks:
+      messaging:
+        ipv4_address: 10.10.3.5
+    depends_on:
+      rabbitmq:
+        # Existing cluster metadata may need peers before any node is healthy.
+        condition: service_started
+    healthcheck: *rabbitmq-healthcheck
+
+  rabbitmq-3:
+    build: ./infra/rabbitmq
+    image: mini-checkers-rabbitmq:latest
+    hostname: rabbitmq-3
+    restart: unless-stopped
+    stop_grace_period: 30s
+    environment: *rabbitmq-environment
+    volumes:
+      - rabbitmq-3-data:/var/lib/rabbitmq
+    networks:
+      messaging:
+        ipv4_address: 10.10.3.6
+    depends_on:
+      rabbitmq-2:
+        condition: service_started
+    healthcheck: *rabbitmq-healthcheck
+
+volumes:
+  postgres-data:
+  postgres-standby-data:
+  rabbitmq-data:
+  rabbitmq-2-data:
+  rabbitmq-3-data:
+
+# Network segments. Fixed subnets, addresses and bridge names are referenced
+# by the firewall rules in infra/firewall/mini-checkers.nft.
+# data and messaging are internal: no gateway, no route to other segments.
+networks:
+  public:
+    driver_opts:
+      com.docker.network.bridge.name: mc-public
+    ipam:
+      config:
+        - subnet: 10.10.1.0/24
+          gateway: 10.10.1.1
+  data:
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.name: mc-data
+    ipam:
+      config:
+        - subnet: 10.10.2.0/24
+          gateway: 10.10.2.1
+  messaging:
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.name: mc-msg
+    ipam:
+      config:
+        - subnet: 10.10.3.0/24
+          gateway: 10.10.3.1

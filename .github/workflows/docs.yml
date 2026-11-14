@@ -1,0 +1,54 @@
+name: Docs
+
+on:
+  push:
+    tags: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-gh-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || github.event.deleted == false
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Graphviz and Doxygen
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends graphviz doxygen
+
+      - name: Install documentation dependencies
+        run: python -m pip install -r docs/guide/requirements.txt
+
+      - name: Build documentation
+        run: python -B docs/build.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: build/docs/html/
+          if-no-files-found: error
+          include-hidden-files: true
+
+      # A GITHUB_TOKEN push does not trigger Pages in "Deploy from a branch" mode.
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          deploy_key: ${{ secrets.GH_PAGES_DEPLOY_KEY }}
+          publish_branch: gh-pages
+          publish_dir: build/docs/html
+          exclude_assets: '.github,.buildinfo'
+          commit_message: 'docs: publish ${{ github.ref_name }}'

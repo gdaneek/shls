@@ -1,0 +1,12 @@
+digraph Context {
+  graph [rankdir=LR, bgcolor="transparent", pad="0.25", nodesep="0.45", ranksep="0.8", fontname="DejaVu Sans", fontsize=13];
+  node [shape=box, style="rounded,filled", color="#56728a", fillcolor="#eef4f8", fontname="DejaVu Sans", fontsize=11, margin="0.18,0.12"];
+  edge [color="#587083", fontname="DejaVu Sans", fontsize=10, arrowsize=0.7];
+  white [label="Игрок 1\nбелые", fillcolor="#ffffff"];
+  black [label="Игрок 2\nчёрные", fillcolor="#ffffff"];
+  observer [label="Зритель", fillcolor="#ffffff"];
+  system [label="Mini Checkers\nигровой сервис", fillcolor="#dfeffa"];
+  white -> system [label="создание / ход"];
+  black -> system [label="присоединение / ход"];
+  observer -> system [label="чтение состояния"];
+}

@@ -1,0 +1,62 @@
+#!/usr/sbin/nft -f
+# Mini Checkers firewall: filters traffic between containers inside the
+# application segments (Docker bridges mc-public, mc-data and mc-msg). Everything that is
+# not explicitly allowed below is logged and dropped.
+#
+# The bridge family sees frames switched inside a bridge without
+# br_netfilter, and it does not interfere with Docker's own iptables rules.
+# Traffic between segments has no route at all (internal networks), so it
+# never reaches this table.
+#
+# Apply: infra/firewall/firewall.sh apply
+# The file replaces the whole table atomically, so it can be re-applied.
+
+define PUBLIC_BRIDGE = "mc-public"
+define DATA_BRIDGE = "mc-data"
+define MESSAGING_BRIDGE = "mc-msg"
+
+# IP plan, must match docker-compose.yml.
+define FRONTEND = 10.10.1.3
+define GAME_API_PUBLIC = 10.10.1.2
+define GAME_API_DATA = 10.10.2.2
+define POSTGRES = 10.10.2.3
+define POSTGRES_STANDBY = 10.10.2.5
+define POSTGRES_MAINTENANCE = 10.10.2.6
+define REDIS = 10.10.2.4
+define GAME_API_MESSAGING = 10.10.3.2
+define RABBITMQ = 10.10.3.3
+define RABBITMQ_NODES = { 10.10.3.3, 10.10.3.5, 10.10.3.6 }
+define EVENT_WORKER = 10.10.3.4
+
+table bridge mini_checkers
+delete table bridge mini_checkers
+
+table bridge mini_checkers {
+  chain forward {
+    type filter hook forward priority filter; policy accept;
+
+    # Other bridges on the host are not ours: leave them alone.
+    meta ibrname != { $PUBLIC_BRIDGE, $DATA_BRIDGE, $MESSAGING_BRIDGE } accept
+
+    # Address resolution and replies to allowed connections.
+    ether type arp accept
+    ct state established,related accept
+
+    # Explicit ALLOW rules (new TCP connections only).
+    meta ibrname $PUBLIC_BRIDGE ip saddr $FRONTEND ip daddr $GAME_API_PUBLIC tcp dport 8000 ct state new counter accept comment "ALLOW frontend -> game-api"
+    meta ibrname $DATA_BRIDGE ip saddr $GAME_API_DATA ip daddr $POSTGRES tcp dport 5432 ct state new counter accept comment "ALLOW game-api -> postgres"
+    meta ibrname $DATA_BRIDGE ip saddr $GAME_API_DATA ip daddr $POSTGRES_STANDBY tcp dport 5432 ct state new counter accept comment "ALLOW game-api -> postgres-standby"
+    meta ibrname $DATA_BRIDGE ip saddr $POSTGRES ip daddr $POSTGRES_STANDBY tcp dport 5432 ct state new counter accept comment "ALLOW postgres -> peer"
+    meta ibrname $DATA_BRIDGE ip saddr $POSTGRES_STANDBY ip daddr $POSTGRES tcp dport 5432 ct state new counter accept comment "ALLOW postgres-standby -> peer"
+    meta ibrname $DATA_BRIDGE ip saddr $POSTGRES_MAINTENANCE ip daddr { $POSTGRES, $POSTGRES_STANDBY } tcp dport 5432 ct state new counter accept comment "ALLOW maintenance -> postgres nodes"
+    meta ibrname $DATA_BRIDGE ip saddr $GAME_API_DATA ip daddr $REDIS tcp dport 6379 ct state new counter accept comment "ALLOW game-api -> redis"
+    meta ibrname $MESSAGING_BRIDGE ip saddr $GAME_API_MESSAGING ip daddr $RABBITMQ_NODES tcp dport 5672 ct state new counter accept comment "ALLOW game-api -> rabbitmq nodes"
+    meta ibrname $MESSAGING_BRIDGE ip saddr $EVENT_WORKER ip daddr $RABBITMQ_NODES tcp dport 5672 ct state new counter accept comment "ALLOW event-worker -> rabbitmq nodes"
+    meta ibrname $MESSAGING_BRIDGE ip saddr $RABBITMQ_NODES ip daddr $RABBITMQ_NODES tcp dport { 4369, 25672 } ct state new counter accept comment "ALLOW RabbitMQ peer discovery and replication"
+    meta ibrname $MESSAGING_BRIDGE ip saddr $RABBITMQ_NODES ip daddr $RABBITMQ_NODES tcp dport 35672-35682 ct state new counter accept comment "ALLOW RabbitMQ node-to-CLI callbacks"
+
+    # Explicit DENY: everything else inside the segments.
+    limit rate 10/second burst 20 packets log prefix "mc-fw-drop: " level info
+    counter drop comment "DENY everything else in mc-public / mc-data / mc-msg"
+  }
+}
